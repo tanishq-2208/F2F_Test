@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
+//import 'screens/landing_screen.dart';
+import 'screens/upload_items_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -25,7 +26,16 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: HomeScreen(),
+      // Remove these lines
+      // initialRoute: '/',
+      // routes: {
+      //   '/': (context) => const LandingPage(),
+      //   '/login': (context) => const LoginScreen(),
+      //   '/register': (context) => RegistrationScreen(
+      //         role: ModalRoute.of(context)!.settings.arguments as String,
+      //       ),
+      // },
+      home: const UploadItemsScreen(),
     );
   }
 }
