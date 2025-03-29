@@ -3,6 +3,9 @@ import 'package:f2f/screens/home_screen.dart';
 import 'package:f2f/screens/my_orders_screen.dart';
 import 'package:f2f/screens/upload_items_screen.dart';
 import 'package:f2f/screens/welcome_screen.dart';
+import 'package:f2f/screens/customer_registration_screen.dart';
+import 'package:f2f/screens/home_screen.dart';
+import 'package:f2f/screens/registration_screen.dart';
 import 'package:flutter/material.dart';
 import 'screens/landing_screen.dart';
 import 'screens/products_page.dart';
@@ -43,7 +46,6 @@ class MyApp extends StatelessWidget {
         '/upload_items': (context) => const UploadItemsScreen(),
       },
       home: const WelcomeScreen(),
-      //wel
     );
   }
 }
