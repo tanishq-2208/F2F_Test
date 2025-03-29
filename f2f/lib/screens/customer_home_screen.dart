@@ -3,6 +3,8 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../models/product.dart';
 import '../services/product_service.dart';
 import '../screens/farmer_selection_screen.dart';
+import '../widgets/customer_bottom_navigation_bar.dart';
+import 'reel_screen.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -12,6 +14,33 @@ class CustomerHomeScreen extends StatefulWidget {
 }
 
 class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
+  // Add this variable with other state variables
+  int _selectedIndex = 0;
+
+  // Add this method
+  // Fix the navigation method
+  void _onNavigationItemSelected(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    
+    // Navigation logic
+    switch (index) {
+      case 0: // Home
+        // Already on home screen
+        break;
+      case 1: // Reels
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ReelScreen()),
+        );
+        break;
+      case 2: // Orders
+        Navigator.pushNamed(context, '/my_orders');
+        break;
+    }
+  }
+
   final PageController _bannerController = PageController();
   String _selectedCategory = 'Fruits';
   List<Product> _products = [];
@@ -61,22 +90,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Farm2Fork Market'),
-        // In the AppBar actions of CustomerHomeScreen
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.receipt_long),
-            onPressed: () {
-              Navigator.pushNamed(context, '/my_orders');
-            },
-            tooltip: 'My Orders',
-          ),
-          IconButton(
-            icon: const Icon(Icons.shopping_cart),
-            onPressed: () {
-              // Navigate to cart
-            },
-          ),
-        ],
+        // Removed the action icons from here
       ),
       body: RefreshIndicator(
         onRefresh: _loadProducts,
@@ -103,6 +117,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: CustomerBottomNavigationBar(
+        selectedIndex: _selectedIndex,
+        onItemSelected: _onNavigationItemSelected,
+      ),
     );
   }
 
@@ -112,7 +130,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         SizedBox(
           height: 180,
           child: PageView.builder(
-            controller: _bannerController,
+            controller: _bannerController, // Fix: Changed from bannerController to _bannerController
             itemCount: _bannerImages.length,
             itemBuilder: (context, index) {
               return Container(

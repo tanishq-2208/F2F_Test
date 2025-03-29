@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-// TODO: Add intl package to pubspec.yaml:
-// dependencies:
-//   intl: ^0.18.0
 import 'package:intl/intl.dart';
 import '../models/rating.dart';
 import '../services/farmer_service.dart';
+import '../widgets/customer_bottom_navigation_bar.dart';
+import 'customer_home_screen.dart';
+import 'reel_screen.dart';
 import 'rate_farmer_screen.dart';
 
 class MyOrdersScreen extends StatefulWidget {
@@ -69,6 +69,27 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> with SingleTickerProvid
               ? const Center(child: CircularProgressIndicator())
               : _buildCompletedOrdersList(),
         ],
+      ),
+      bottomNavigationBar: CustomerBottomNavigationBar(
+        selectedIndex: 2, // Set to 2 for Orders tab
+        onItemSelected: (index) {
+          switch (index) {
+            case 0: // Home
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const CustomerHomeScreen()),
+              );
+              break;
+            case 1: // Reels
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const ReelScreen()),
+              );
+              break;
+            case 2: // Orders - already on this screen
+              break;
+          }
+        },
       ),
     );
   }
