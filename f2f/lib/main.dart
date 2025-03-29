@@ -1,6 +1,7 @@
 import 'package:f2f/screens/customer_home_screen.dart';
 import 'package:f2f/screens/home_screen.dart';
 import 'package:f2f/screens/my_orders_screen.dart';
+import 'package:f2f/screens/payment_screen.dart';
 import 'package:f2f/screens/upload_items_screen.dart';
 import 'package:f2f/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
@@ -37,8 +38,14 @@ class MyApp extends StatelessWidget {
         '/customer_home': (context) => const CustomerHomeScreen(),
         '/products': (context) => const ProductsPage(),
         '/upload_items': (context) => const UploadItemsScreen(),
+        '/payment_method':
+            (context) => PaymentScreen(
+              amount: 0.0, // This will be overridden by arguments
+              orderId: '', // This will be overridden by arguments
+            ),
       },
-      home: const WelcomeScreen(),
+      // Using PaymentMethodScreen as home for testing
+      home: PaymentScreen(amount: 0, orderId: 'ORD123456'),
     );
   }
 }

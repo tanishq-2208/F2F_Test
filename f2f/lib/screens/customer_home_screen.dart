@@ -34,7 +34,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       // Replace with actual API call to fetch products
       final products = await ProductService.getProducts();
@@ -51,9 +51,12 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   }
 
   List<Product> get _filteredProducts {
-    return _products.where((product) => 
-      product.category.toLowerCase() == _selectedCategory.toLowerCase()
-    ).toList();
+    return _products
+        .where(
+          (product) =>
+              product.category.toLowerCase() == _selectedCategory.toLowerCase(),
+        )
+        .toList();
   }
 
   @override
@@ -87,18 +90,18 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             children: [
               // Ad Banner Carousel
               _buildBannerCarousel(),
-              
+
               const SizedBox(height: 20),
-              
+
               // Category Selection
               _buildCategorySelector(),
-              
+
               const SizedBox(height: 16),
-              
+
               // Products Grid
-              _isLoading 
-                ? const Center(child: CircularProgressIndicator())
-                : _buildProductsGrid(),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildProductsGrid(),
             ],
           ),
         ),
@@ -135,9 +138,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         color: Colors.grey[300],
-                        child: const Center(
-                          child: Text('Image not available'),
-                        ),
+                        child: const Center(child: Text('Image not available')),
                       );
                     },
                   ),
@@ -170,10 +171,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         children: [
           const Text(
             'Categories',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           Row(
@@ -186,12 +184,14 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     });
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _selectedCategory == 'Fruits' 
-                        ? Colors.green 
-                        : Colors.grey[300],
-                    foregroundColor: _selectedCategory == 'Fruits' 
-                        ? Colors.white 
-                        : Colors.black,
+                    backgroundColor:
+                        _selectedCategory == 'Fruits'
+                            ? Colors.green
+                            : Colors.grey[300],
+                    foregroundColor:
+                        _selectedCategory == 'Fruits'
+                            ? Colors.white
+                            : Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -208,12 +208,14 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     });
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _selectedCategory == 'Vegetables' 
-                        ? Colors.green 
-                        : Colors.grey[300],
-                    foregroundColor: _selectedCategory == 'Vegetables' 
-                        ? Colors.white 
-                        : Colors.black,
+                    backgroundColor:
+                        _selectedCategory == 'Vegetables'
+                            ? Colors.green
+                            : Colors.grey[300],
+                    foregroundColor:
+                        _selectedCategory == 'Vegetables'
+                            ? Colors.white
+                            : Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -235,10 +237,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         child: Center(
           child: Text(
             'No ${_selectedCategory.toLowerCase()} available at the moment',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           ),
         ),
       );
@@ -267,9 +266,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   Widget _buildProductCard(Product product) {
     return Card(
       elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -277,7 +274,9 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(15),
+                ),
                 image: DecorationImage(
                   image: NetworkImage(product.imageUrl),
                   fit: BoxFit.cover,
@@ -285,7 +284,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
               ),
             ),
           ),
-          
+
           // Product Details
           Padding(
             padding: const EdgeInsets.all(10),
@@ -312,10 +311,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 const SizedBox(height: 4),
                 Text(
                   'Available: ${product.quantity} ${product.unit}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 8),
                 SizedBox(
@@ -326,10 +322,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => FarmerSelectionScreen(
-                            productName: product.name,
-                            productCategory: product.category,
-                          ),
+                          builder:
+                              (context) => FarmerSelectionScreen(
+                                productName: product.name,
+                                productCategory: product.category,
+                              ),
                         ),
                       );
                     },
