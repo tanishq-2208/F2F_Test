@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Rules for the users collection
+    match /users/{userId} {
+      
+      // Allow authenticated users to read their own data
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Allow authenticated users to write their own data
+      allow write: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow admins to read and write any user data
+      allow read, write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.admin == true;
+    }
+
+    // Rules for the items collection
+    match /items/{itemId} {
+      
+      // Allow anyone to read items
+      allow read: if true;
+      
+      // Allow authenticated users to add items
+      allow create: if request.auth != null;
+      
+      // Allow admins to update or delete items
+      allow update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.admin == true;
+    }
+  }
+}
