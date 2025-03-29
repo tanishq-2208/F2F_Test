@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import '../widgets/farmer_bottom_navigation_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -58,7 +59,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           const Center(child: Text('Profile Page')),
         ],
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+      bottomNavigationBar: FarmerBottomNavigationBar(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onItemTapped,
+      ),
     );
   }
 
@@ -173,34 +177,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return ClipRRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8), // Decreased from 10
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: Colors.green,
-          unselectedItemColor: Colors.grey.withOpacity(0.5), // Decreased from 0.7
-          items: [
-            _buildNavItem(Icons.home_rounded, 'Home'),
-            _buildNavItem(Icons.psychology_rounded, 'AI'),
-            _buildNavItem(Icons.add_business_rounded, 'Sell'),
-            _buildNavItem(Icons.person_rounded, 'Profile'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  BottomNavigationBarItem _buildNavItem(IconData icon, String label) {
-    return BottomNavigationBarItem(
-      icon: Icon(icon),
-      label: label,
     );
   }
 
