@@ -26,18 +26,11 @@ class _UploadItemsScreenState extends State<UploadItemsScreen> {
             children: [
               const Text(
                 'Select Category',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               ListTile(
-                leading: const Icon(
-                  Icons.apple_sharp,
-                  color: Colors.red,
-                  size: 28,
-                ),
+                leading: const Icon(Icons.apple),
                 title: const Text('Fruits'),
                 onTap: () {
                   setState(() {
@@ -47,29 +40,11 @@ class _UploadItemsScreenState extends State<UploadItemsScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(
-                  Icons.eco,
-                  color: Colors.green,
-                  size: 28,
-                ),
+                leading: const Icon(Icons.eco),
                 title: const Text('Vegetables'),
                 onTap: () {
                   setState(() {
                     selectedItem = 'Vegetables';
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.grass,
-                  color: Colors.lightGreen,
-                  size: 28,
-                ),
-                title: const Text('Leafy Vegetables'),
-                onTap: () {
-                  setState(() {
-                    selectedItem = 'Leafy Vegetables';
                   });
                   Navigator.pop(context);
                 },
@@ -113,9 +88,7 @@ class _UploadItemsScreenState extends State<UploadItemsScreen> {
     final double width = screenSize.width;
     
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Upload Items'),
-      ),
+      appBar: AppBar(title: const Text('Upload Items')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
