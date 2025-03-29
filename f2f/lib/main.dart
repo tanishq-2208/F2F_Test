@@ -2,6 +2,7 @@ import 'package:f2f/screens/customer_home_screen.dart';
 import 'package:f2f/screens/home_screen.dart';
 import 'package:f2f/screens/my_orders_screen.dart';
 import 'package:f2f/screens/upload_items_screen.dart';
+import 'package:f2f/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'screens/landing_screen.dart';
 import 'screens/products_page.dart';
@@ -30,11 +31,14 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-routes: {
-  '/my_orders': (context) => const MyOrdersScreen(),
-  // other routes...
-},
-      home: const CustomerHomeScreen(),
+      routes: {
+        '/my_orders': (context) => const MyOrdersScreen(),
+        '/home': (context) => const HomeScreen(),
+        '/customer_home': (context) => const CustomerHomeScreen(),
+        '/products': (context) => const ProductsPage(),
+        '/upload_items': (context) => const UploadItemsScreen(),
+      },
+      home: const WelcomeScreen(),
     );
   }
 }
