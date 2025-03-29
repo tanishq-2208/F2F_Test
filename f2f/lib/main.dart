@@ -6,8 +6,12 @@ import 'package:f2f/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'screens/landing_screen.dart';
 import 'screens/products_page.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -39,6 +43,7 @@ class MyApp extends StatelessWidget {
         '/upload_items': (context) => const UploadItemsScreen(),
       },
       home: const WelcomeScreen(),
+      //wel
     );
   }
 }
