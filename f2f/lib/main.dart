@@ -1,3 +1,7 @@
+import 'package:f2f/screens/customer_home_screen.dart';
+import 'package:f2f/screens/home_screen.dart';
+import 'package:f2f/screens/my_orders_screen.dart';
+import 'package:f2f/screens/upload_items_screen.dart';
 import 'package:flutter/material.dart';
 import 'screens/landing_screen.dart';
 import 'screens/products_page.dart';
@@ -26,16 +30,11 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      // Remove these lines
-      // initialRoute: '/',
-      // routes: {
-      //   '/': (context) => const LandingPage(),
-      //   '/login': (context) => const LoginScreen(),
-      //   '/register': (context) => RegistrationScreen(
-      //         role: ModalRoute.of(context)!.settings.arguments as String,
-      //       ),
-      // },
-      home: const ProductsPage(),
+routes: {
+  '/my_orders': (context) => const MyOrdersScreen(),
+  // other routes...
+},
+      home: const CustomerHomeScreen(),
     );
   }
 }

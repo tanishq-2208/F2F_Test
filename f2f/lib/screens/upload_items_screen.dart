@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/farmer_bottom_navigation_bar.dart';
 
 class UploadItemsScreen extends StatefulWidget {
   const UploadItemsScreen({Key? key}) : super(key: key);
@@ -9,6 +10,7 @@ class UploadItemsScreen extends StatefulWidget {
 
 class _UploadItemsScreenState extends State<UploadItemsScreen> {
   String? selectedItem;
+  int _selectedIndex = 2; // Set to 2 for the "Sell" tab
 
   void _showOptionsBottomSheet() {
     showModalBottomSheet(
@@ -79,6 +81,30 @@ class _UploadItemsScreenState extends State<UploadItemsScreen> {
     );
   }
 
+  void _onItemTapped(int index) {
+    if (index != _selectedIndex) {
+      setState(() {
+        _selectedIndex = index;
+      });
+      
+      // Navigate to the appropriate screen based on the index
+      switch (index) {
+        case 0:
+          Navigator.pushReplacementNamed(context, '/home');
+          break;
+        case 1:
+          Navigator.pushReplacementNamed(context, '/ai');
+          break;
+        case 2:
+          // Already on the sell page
+          break;
+        case 3:
+          Navigator.pushReplacementNamed(context, '/profile');
+          break;
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,7 +117,7 @@ class _UploadItemsScreenState extends State<UploadItemsScreen> {
           children: [
             ElevatedButton.icon(
               onPressed: _showOptionsBottomSheet,
-              icon: const Icon(Icons.add,color: Colors.white),
+              icon: const Icon(Icons.add, color: Colors.white),
               label: const Text('Add Items'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.all(16),
@@ -110,6 +136,10 @@ class _UploadItemsScreenState extends State<UploadItemsScreen> {
               ),
           ],
         ),
+      ),
+      bottomNavigationBar: FarmerBottomNavigationBar(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onItemTapped,
       ),
     );
   }
