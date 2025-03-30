@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:f2f/utils/string_extensions.dart'; // Add this import
 
 class Product {
   final String name;
@@ -18,14 +19,16 @@ class Product {
   });
 }
 
-class ProductsPage extends StatefulWidget {
-  const ProductsPage({super.key});
+class ProductsScreen extends StatefulWidget {
+  final String category;
+
+  const ProductsScreen({super.key, required this.category});
 
   @override
-  State<ProductsPage> createState() => _ProductsPageState();
+  State<ProductsScreen> createState() => _ProductsScreenState();
 }
 
-class _ProductsPageState extends State<ProductsPage> {
+class _ProductsScreenState extends State<ProductsScreen> {
   bool isVegetableSection = false;
 
   final List<Product> fruits = [
@@ -65,20 +68,17 @@ class _ProductsPageState extends State<ProductsPage> {
   @override
   void initState() {
     super.initState();
+    // Set isVegetableSection based on the category passed
+    isVegetableSection = widget.category == 'Vegetables';
     filteredProducts = List.from(products);
   }
 
   // Update AppBar in build method
   @override
   Widget build(BuildContext context) {
-    // Get screen size
-    final Size screenSize = MediaQuery.of(context).size;
-    final double height = screenSize.height;
-    final double width = screenSize.width;
-    
     return Scaffold(
       appBar: AppBar(
-        title: Text(isVegetableSection ? 'Vegetables' : 'Fruits'),
+        title: Text(widget.category.tr(context)),
         backgroundColor: Colors.green.shade800,
         elevation: 0,
         actions: [
@@ -95,7 +95,9 @@ class _ProductsPageState extends State<ProductsPage> {
               color: Colors.white,
             ),
             label: Text(
-              isVegetableSection ? 'Show Fruits' : 'Show Vegetables',
+              isVegetableSection
+                  ? 'Show Fruits'.tr(context)
+                  : 'Show Vegetables'.tr(context),
               style: const TextStyle(color: Colors.white),
             ),
           ),
@@ -122,7 +124,7 @@ class _ProductsPageState extends State<ProductsPage> {
             child: TextField(
               controller: searchController,
               decoration: InputDecoration(
-                hintText: 'Search products...',
+                hintText: 'Search products...'.tr(context),
                 prefixIcon: Icon(Icons.search, color: Colors.green.shade800),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
@@ -202,17 +204,17 @@ class _ProductsPageState extends State<ProductsPage> {
                       ),
                     ),
                     title: Text(
-                      product.name,
-                      style: TextStyle(
-                        fontSize: 18,
+                      product.name.tr(context),
+                      style: const TextStyle(
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.green.shade900,
                       ),
                     ),
                     subtitle:
                         product.selectedQuantity != null
                             ? Text(
-                              '${product.selectedQuantity} ${product.unit} at ₹${product.selectedPrice}/${product.unit}',
+                              '${product.selectedQuantity} ${product.unit} at ₹${product.selectedPrice}/${product.unit}'
+                                  .tr(context),
                               style: TextStyle(
                                 color: Colors.green.shade700,
                                 fontSize: 14,
@@ -248,53 +250,15 @@ class _ProductsPageState extends State<ProductsPage> {
             ),
             child: ElevatedButton.icon(
               onPressed: () {
-                double totalAmount = 0;
-                bool hasSelectedProducts = false;
-
-                for (var product in products) {
-                  if (product.selectedQuantity != null &&
-                      product.selectedPrice != null) {
-                    totalAmount +=
-                        product.selectedQuantity! * product.selectedPrice!;
-                    hasSelectedProducts = true;
-                  }
-                }
-
-                if (hasSelectedProducts) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Total Sale Amount: ₹$totalAmount',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      backgroundColor: Colors.green.shade800,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-
-                  setState(() {
-                    for (var product in products) {
-                      product.selectedQuantity = null;
-                      product.selectedPrice = null;
-                    }
-                  });
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text(
-                        'Please add quantity and price for at least one product',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      backgroundColor: Colors.red.shade800,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                }
+                _processSale(context);
               },
               icon: const Icon(Icons.sell, size: 24),
-              label: const Text(
-                'SELL SELECTED ITEMS',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              label: Text(
+                'SELL SELECTED ITEMS'.tr(context),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green.shade800,
@@ -308,6 +272,51 @@ class _ProductsPageState extends State<ProductsPage> {
         ],
       ),
     );
+  }
+
+  void _processSale(BuildContext context) {
+    double totalAmount = 0;
+    bool hasSelectedProducts = false;
+
+    for (var product in products) {
+      if (product.selectedQuantity != null && product.selectedPrice != null) {
+        totalAmount += product.selectedQuantity! * product.selectedPrice!;
+        hasSelectedProducts = true;
+      }
+    }
+
+    if (hasSelectedProducts) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Total Sale Amount: ₹$totalAmount '.tr(context),
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green.shade800,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      setState(() {
+        for (var product in products) {
+          product.selectedQuantity = null;
+          product.selectedPrice = null;
+        }
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please add quantity and price for at least one product'.tr(
+              context,
+            ),
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red.shade800,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   void _showAddBottomSheet(BuildContext context, Product product) {
@@ -326,25 +335,21 @@ class _ProductsPageState extends State<ProductsPage> {
               if (parsedValue != null) {
                 if (selectedUnit == 'kg' && parsedValue > 5) {
                   setModalState(() {
-                    // Changed from setState to setModalState
                     quantityError = 'Maximum quantity is 5 kg';
                     quantity = 5.0;
                   });
                 } else if (selectedUnit == 'g' && parsedValue > 5000) {
                   setModalState(() {
-                    // Changed from setState to setModalState
                     quantityError = 'Maximum quantity is 5000 g';
                     quantity = 5000.0;
                   });
                 } else if (selectedUnit == 'dozen' && parsedValue > 10) {
                   setModalState(() {
-                    // Changed from setState to setModalState
                     quantityError = 'Maximum quantity is 10 dozen';
                     quantity = 10.0;
                   });
                 } else {
                   setModalState(() {
-                    // Changed from setState to setModalState
                     quantityError = null;
                     quantity = parsedValue;
                   });
@@ -358,7 +363,7 @@ class _ProductsPageState extends State<ProductsPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    product.name,
+                    product.name.tr(context),
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -367,24 +372,26 @@ class _ProductsPageState extends State<ProductsPage> {
                   const SizedBox(height: 20),
                   DropdownButtonFormField<String>(
                     value: selectedUnit,
-                    decoration: const InputDecoration(
-                      labelText: 'Select Unit',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: 'Select Unit'.tr(context),
+                      border: const OutlineInputBorder(),
                     ),
-                    items: const [
+                    items: [
                       DropdownMenuItem(
                         value: 'kg',
-                        child: Text('Kilograms (kg)'),
+                        child: Text('Kilograms (kg)'.tr(context)),
                       ),
-                      DropdownMenuItem(value: 'g', child: Text('Grams (g)')),
+                      DropdownMenuItem(
+                        value: 'g',
+                        child: Text('Grams (g)'.tr(context)),
+                      ),
                       DropdownMenuItem(
                         value: 'dozen',
-                        child: Text('Dozen (12 pieces)'),
+                        child: Text('Dozen (12 pieces)'.tr(context)),
                       ),
                     ],
                     onChanged: (String? newValue) {
                       setModalState(() {
-                        // Changed from setState to setModalState
                         selectedUnit = newValue!;
                         quantity = 1.0;
                         quantityError = null;
@@ -395,15 +402,15 @@ class _ProductsPageState extends State<ProductsPage> {
                   TextField(
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: 'Quantity ($selectedUnit)',
+                      labelText: 'Quantity ($selectedUnit)'.tr(context),
                       border: const OutlineInputBorder(),
-                      errorText: quantityError,
+                      errorText: quantityError?.tr(context),
                       helperText:
                           selectedUnit == 'kg'
-                              ? 'Maximum: 5 kg'
+                              ? 'Maximum: 5 kg'.tr(context)
                               : selectedUnit == 'g'
-                              ? 'Maximum: 5000 g'
-                              : 'Maximum: 10 dozen',
+                              ? 'Maximum: 5000 g'.tr(context)
+                              : 'Maximum: 10 dozen'.tr(context),
                     ),
                     onChanged: validateQuantity,
                   ),
@@ -411,12 +418,11 @@ class _ProductsPageState extends State<ProductsPage> {
                   TextField(
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: 'Price per $selectedUnit',
+                      labelText: ('Price per $selectedUnit').tr(context),
                       border: const OutlineInputBorder(),
                     ),
                     onChanged: (value) {
                       setModalState(() {
-                        // Changed from setState to setModalState
                         price = double.tryParse(value) ?? 0.0;
                       });
                     },
@@ -439,7 +445,7 @@ class _ProductsPageState extends State<ProductsPage> {
                         vertical: 12,
                       ),
                     ),
-                    child: const Text('OK'),
+                    child: Text('OK'.tr(context)),
                   ),
                 ],
               ),

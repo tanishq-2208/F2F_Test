@@ -14,7 +14,8 @@ class MyOrdersScreen extends StatefulWidget {
   State<MyOrdersScreen> createState() => _MyOrdersScreenState();
 }
 
-class _MyOrdersScreenState extends State<MyOrdersScreen> with SingleTickerProviderStateMixin {
+class _MyOrdersScreenState extends State<MyOrdersScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<Map<String, dynamic>> _completedOrders = [];
   bool _isLoading = true;
@@ -52,10 +53,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> with SingleTickerProvid
         title: const Text('My Orders'),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Active'),
-            Tab(text: 'Completed'),
-          ],
+          tabs: const [Tab(text: 'Active'), Tab(text: 'Completed')],
         ),
       ),
       body: TabBarView(
@@ -63,7 +61,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> with SingleTickerProvid
         children: [
           // Active orders tab
           const Center(child: Text('No active orders')),
-          
+
           // Completed orders tab
           _isLoading
               ? const Center(child: CircularProgressIndicator())
@@ -123,11 +121,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> with SingleTickerProvid
                         ),
                       ),
                       Text(
-DateFormat('MMM dd, yyyy').format(DateTime.parse(order['orderDate'].toString())),
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                        ),
+                        DateFormat(
+                          'MMM dd, yyyy',
+                        ).format(DateTime.parse(order['orderDate'].toString())),
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
                       ),
                     ],
                   ),
@@ -143,15 +140,16 @@ DateFormat('MMM dd, yyyy').format(DateTime.parse(order['orderDate'].toString()))
                           final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => RateFarmerScreen(
-                                farmerId: order['farmerId'],
-                                farmerName: order['farmerName'],
-                                orderId: order['orderId'],
-                                productName: order['productName'],
-                              ),
+                              builder:
+                                  (context) => RateFarmerScreen(
+                                    farmerId: order['farmerId'],
+                                    farmerName: order['farmerName'],
+                                    orderId: order['orderId'],
+                                    productName: order['productName'],
+                                  ),
                             ),
                           );
-                          
+
                           if (result == true) {
                             // Refresh the list after rating
                             _loadCompletedOrders();
