@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:f2f/screens/farmer_login_screen.dart';
 import 'package:f2f/screens/customer_login_screen.dart';
+import 'package:f2f/widgets/language_toggle.dart';
+import 'package:f2f/utils/string_extensions.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
+  @override
   @override
   Widget build(BuildContext context) {
     // Get screen size
