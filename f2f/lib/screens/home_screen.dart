@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../widgets/farmer_bottom_navigation_bar.dart';
+import 'package:f2f/utils/string_extensions.dart'; // Add this import
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,28 +11,61 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   final PageController _mainPageController = PageController();
   final PageController _bannerController = PageController();
   late AnimationController _bounceController;
   int _selectedIndex = 0;
 
-  final List<Map<String, dynamic>> bannerContent = [
-    {'image': 'assets/images/banner1.png', 'title': '50% OFF', 'subtitle': 'On All Farming Tools'},
-    {'image': 'assets/images/banner2.png', 'title': 'New Arrivals', 'subtitle': 'Latest Machinery Collection'},
-    {'image': 'assets/images/banner3.png', 'title': 'Special Deal', 'subtitle': 'Premium Quality Seeds'},
-  ];
-
-  final List<Map<String, dynamic>> categories = [
-    {'title': 'Hand Tools & Gardening Equipment', 'icon': Icons.agriculture, 'color': Colors.green[100] ?? Colors.green},
-    {'title': 'Machinery & Equipment', 'icon': Icons.precision_manufacturing, 'color': Colors.blue[100] ?? Colors.blue},
-    {'title': 'Seeds, Fertilizers & Soil Enhancers', 'icon': Icons.eco, 'color': Colors.orange[100] ?? Colors.orange},
-  ];
+  late List<Map<String, dynamic>> bannerContent;
+  late List<Map<String, dynamic>> categories;
 
   @override
   void initState() {
     super.initState();
-    _bounceController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
+    _bounceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+  }
+
+  void _initializeContent(BuildContext context) {
+    bannerContent = [
+      {
+        'image': 'assets/images/banner1.png',
+        'title': '50% OFF'.tr(context),
+        'subtitle': 'On All Farming Tools'.tr(context),
+      },
+      {
+        'image': 'assets/images/banner2.png',
+        'title': 'New Arrivals'.tr(context),
+        'subtitle': 'Latest Machinery Collection'.tr(context),
+      },
+      {
+        'image': 'assets/images/banner3.png',
+        'title': 'Special Deal'.tr(context),
+        'subtitle': 'Premium Quality Seeds'.tr(context),
+      },
+    ];
+
+    categories = [
+      {
+        'title': 'Hand Tools & Gardening Equipment'.tr(context),
+        'icon': Icons.agriculture,
+        'color': Colors.green[100] ?? Colors.green,
+      },
+      {
+        'title': 'Machinery & Equipment'.tr(context),
+        'icon': Icons.precision_manufacturing,
+        'color': Colors.blue[100] ?? Colors.blue,
+      },
+      {
+        'title': 'Seeds, Fertilizers & Soil Enhancers'.tr(context),
+        'icon': Icons.eco,
+        'color': Colors.orange[100] ?? Colors.orange,
+      },
+    ];
   }
 
   void _onItemTapped(int index) {
@@ -44,9 +78,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    // Initialize content with translations
+    _initializeContent(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Farmer's Marketplace"),
+        title: Text("Farmer's Marketplace".tr(context)),
         backgroundColor: Colors.green,
       ),
       body: PageView(
@@ -54,9 +91,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         onPageChanged: (index) => setState(() => _selectedIndex = index),
         children: [
           _buildHomeContent(),
-          const Center(child: Text('AI Page')),
-          const Center(child: Text('Sell Page')),
-          const Center(child: Text('Profile Page')),
+          Center(child: Text('AI Page'.tr(context))),
         ],
       ),
       bottomNavigationBar: FarmerBottomNavigationBar(
@@ -88,9 +123,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             image: DecorationImage(
                               image: AssetImage(bannerContent[index]['image']),
                               fit: BoxFit.cover,
-                              // In the banner image decoration
                               colorFilter: ColorFilter.mode(
-                                Colors.black.withOpacity(0.2), // Decreased from 0.3
+                                Colors.black.withOpacity(0.2),
                                 BlendMode.darken,
                               ),
                             ),
@@ -113,7 +147,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               const SizedBox(height: 8),
                               Text(
                                 bannerContent[index]['subtitle'],
-                                style: const TextStyle(color: Colors.white, fontSize: 16),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
                               ),
                             ],
                           ),
@@ -144,9 +181,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Categories',
-                  style: TextStyle(
+                Text(
+                  'Categories'.tr(context),
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.green,
@@ -165,13 +202,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                       title: Text(
                         category['title'],
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       trailing: const Icon(Icons.arrow_forward_ios),
                       onTap: () {},
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),
