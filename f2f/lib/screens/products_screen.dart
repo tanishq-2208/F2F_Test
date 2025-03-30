@@ -30,7 +30,6 @@ class ProductsScreen extends StatefulWidget {
 
 class _ProductsScreenState extends State<ProductsScreen> {
   bool isVegetableSection = false;
-  String? selectedPaymentMethod;
 
   final List<Product> fruits = [
     Product(
@@ -251,7 +250,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ),
             child: ElevatedButton.icon(
               onPressed: () {
-                _showPaymentMethodBottomSheet(context);
+                _processSale(context);
               },
               icon: const Icon(Icons.sell, size: 24),
               label: Text(
@@ -275,76 +274,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     );
   }
 
-  void _showPaymentMethodBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-      ),
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setModalState) {
-            return Container(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Select Payment Method'.tr(context),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  ListTile(
-                    leading: Icon(Icons.money, color: Colors.green.shade800),
-                    title: Text('Cash'.tr(context)),
-                    onTap: () {
-                      setModalState(() {
-                        selectedPaymentMethod = 'Cash';
-                      });
-                      _processSale(context);
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.credit_card,
-                      color: Colors.green.shade800,
-                    ),
-                    title: Text('Credit/Debit Card'.tr(context)),
-                    onTap: () {
-                      setModalState(() {
-                        selectedPaymentMethod = 'Credit/Debit Card';
-                      });
-                      _processSale(context);
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.phone_android,
-                      color: Colors.green.shade800,
-                    ),
-                    title: Text('UPI'.tr(context)),
-                    onTap: () {
-                      setModalState(() {
-                        selectedPaymentMethod = 'UPI';
-                      });
-                      _processSale(context);
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   void _processSale(BuildContext context) {
-    Navigator.pop(context); // Close the payment method bottom sheet
-
     double totalAmount = 0;
     bool hasSelectedProducts = false;
 
@@ -359,8 +289,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Total Sale Amount: ₹$totalAmount - Payment Method: $selectedPaymentMethod'
-                .tr(context),
+            'Total Sale Amount: ₹$totalAmount '.tr(context),
             style: const TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.green.shade800,
@@ -489,7 +418,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   TextField(
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: ('Price per ' + selectedUnit).tr(context),
+                      labelText: ('Price per $selectedUnit').tr(context),
                       border: const OutlineInputBorder(),
                     ),
                     onChanged: (value) {

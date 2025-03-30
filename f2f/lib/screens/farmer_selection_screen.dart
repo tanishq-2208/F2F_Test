@@ -3,16 +3,18 @@ import '../models/farmer.dart';
 import '../services/farmer_service.dart';
 import '../widgets/rating_stars.dart';
 import 'checkout_screen.dart';
+import '../widgets/customer_bottom_navigation_bar.dart';
+import 'customer_home_screen.dart';
 
 class FarmerSelectionScreen extends StatefulWidget {
   final String productName;
   final String productCategory;
 
   const FarmerSelectionScreen({
-    Key? key,
+    super.key,
     required this.productName,
     required this.productCategory,
-  }) : super(key: key);
+  });
 
   @override
   State<FarmerSelectionScreen> createState() => _FarmerSelectionScreenState();
@@ -66,6 +68,7 @@ class _FarmerSelectionScreenState extends State<FarmerSelectionScreen> {
           : _farmers.isEmpty
               ? _buildEmptyState()
               : _buildFarmersList(),
+      // Bottom navigation bar removed
     );
   }
 

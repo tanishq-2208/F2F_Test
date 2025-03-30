@@ -2,6 +2,7 @@ import 'package:f2f/screens/customer_home_screen.dart';
 import 'package:f2f/screens/farmer_login_screen.dart';
 import 'package:f2f/screens/home_screen.dart';
 import 'package:f2f/screens/my_orders_screen.dart';
+import 'package:f2f/screens/products_screen.dart';
 import 'package:f2f/screens/registration_screen.dart';
 import 'package:f2f/screens/upload_items_screen.dart';
 import 'package:f2f/screens/welcome_screen.dart';
@@ -12,6 +13,9 @@ import 'firebase_options.dart';
 import 'package:f2f/services/language_service.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+
+
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
