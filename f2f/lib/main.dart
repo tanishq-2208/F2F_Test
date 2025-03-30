@@ -3,8 +3,6 @@ import 'package:f2f/screens/home_screen.dart';
 import 'package:f2f/screens/my_orders_screen.dart';
 import 'package:f2f/screens/upload_items_screen.dart';
 import 'package:flutter/material.dart';
-import 'screens/landing_screen.dart';
-import 'screens/products_page.dart';
 
 void main() {
   runApp(const MyApp());
