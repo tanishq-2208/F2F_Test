@@ -35,7 +35,7 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
 
   void _verifyOtp() {
     // Here you would implement OTP verification logic
-    Navigator.pushReplacementNamed(context, '/home');
+    Navigator.pushNamed(context, '/home');
   }
 
   @override
@@ -44,7 +44,7 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
     final Size screenSize = MediaQuery.of(context).size;
     final double height = screenSize.height;
     final double width = screenSize.width;
-    
+
     return Scaffold(
       body: Stack(
         children: [
@@ -88,13 +88,10 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
                     const SizedBox(height: 12),
                     const Text(
                       'Login with your phone number to continue',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
+                      style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                     const SizedBox(height: 60),
-                    
+
                     // Login form
                     Container(
                       padding: const EdgeInsets.all(24),
@@ -129,16 +126,20 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.green.shade800),
+                                borderSide: BorderSide(
+                                  color: Colors.green.shade800,
+                                ),
                               ),
                             ),
                           ),
                           const SizedBox(height: 20),
-                          
+
                           // OTP field (visible after sending OTP)
                           if (_otpSent)
                             Column(
@@ -159,11 +160,15 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                      ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide(color: Colors.green.shade800),
+                                      borderSide: BorderSide(
+                                        color: Colors.green.shade800,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -185,9 +190,9 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
                                 ),
                               ],
                             ),
-                          
+
                           const SizedBox(height: 20),
-                          
+
                           // Action button
                           ElevatedButton(
                             onPressed: _otpSent ? _verifyOtp : _sendOtp,
@@ -206,6 +211,33 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+                          ),
+
+                          // Registration option
+                          const SizedBox(height: 20),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                "Don't have an account?",
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/farmer_register',
+                                  );
+                                },
+                                child: Text(
+                                  'Register',
+                                  style: TextStyle(
+                                    color: Colors.green.shade800,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),

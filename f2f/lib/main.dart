@@ -1,6 +1,8 @@
 import 'package:f2f/screens/customer_home_screen.dart';
+import 'package:f2f/screens/farmer_login_screen.dart';
 import 'package:f2f/screens/home_screen.dart';
 import 'package:f2f/screens/my_orders_screen.dart';
+import 'package:f2f/screens/registration_screen.dart';
 import 'package:f2f/screens/upload_items_screen.dart';
 import 'package:f2f/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
@@ -64,6 +66,9 @@ class MyApp extends StatelessWidget {
         '/customer_home': (context) => const CustomerHomeScreen(),
         '/products': (context) => const ProductsPage(),
         '/upload_items': (context) => const UploadItemsScreen(),
+        '/farmer_register':
+            (context) => const RegistrationScreen(role: 'farmer'),
+        '/farmer_login': (context) => const FarmerLoginScreen(),
       },
       home: const WelcomeScreen(),
     );
