@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CustomerRegistrationScreen extends StatefulWidget {
   const CustomerRegistrationScreen({Key? key}) : super(key: key);
@@ -11,6 +13,9 @@ class _CustomerRegistrationScreenState extends State<CustomerRegistrationScreen>
   final _formKey = GlobalKey<FormState>();
   final Map<String, dynamic> _formData = {};
   int _currentStep = 0;
+  bool _isLoading = false;
+  final _auth = FirebaseAuth.instance;
+  final _firestore = FirebaseFirestore.instance;
 
   List<Step> get _steps => [
     Step(
@@ -28,17 +33,22 @@ class _CustomerRegistrationScreenState extends State<CustomerRegistrationScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Customer Registration')),
-      body: Form(
-        key: _formKey,
-        child: Stepper(
-          currentStep: _currentStep,
-          steps: _steps,
-          onStepContinue: _continue,
-          onStepCancel: _cancel,
-          controlsBuilder: _buildControls,
-        ),
+      appBar: AppBar(
+        title: const Text('Customer Registration'),
+        backgroundColor: Colors.green,
       ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Form(
+              key: _formKey,
+              child: Stepper(
+                currentStep: _currentStep,
+                steps: _steps,
+                onStepContinue: _continue,
+                onStepCancel: _cancel,
+                controlsBuilder: _buildControls,
+              ),
+            ),
     );
   }
 
@@ -64,6 +74,17 @@ class _CustomerRegistrationScreenState extends State<CustomerRegistrationScreen>
           keyboardType: TextInputType.phone,
           validator: (value) => value?.isEmpty ?? true ? 'Please enter your phone number' : null,
           onSaved: (value) => _formData['Phone Number'] = value,
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          decoration: const InputDecoration(
+            labelText: 'Address',
+            prefixIcon: Icon(Icons.location_on),
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 2,
+          validator: (value) => value?.isEmpty ?? true ? 'Please enter your address' : null,
+          onSaved: (value) => _formData['Address'] = value,
         ),
       ],
     );
@@ -109,6 +130,24 @@ class _CustomerRegistrationScreenState extends State<CustomerRegistrationScreen>
           },
           onSaved: (value) => _formData['Password'] = value,
         ),
+        const SizedBox(height: 16),
+        TextFormField(
+          decoration: const InputDecoration(
+            labelText: 'Confirm Password',
+            prefixIcon: Icon(Icons.lock_outline),
+            border: OutlineInputBorder(),
+          ),
+          obscureText: true,
+          validator: (value) {
+            if (value?.isEmpty ?? true) {
+              return 'Please confirm your password';
+            }
+            if (value != _formData['Password']) {
+              return 'Passwords do not match';
+            }
+            return null;
+          },
+        ),
       ],
     );
   }
@@ -134,10 +173,19 @@ class _CustomerRegistrationScreenState extends State<CustomerRegistrationScreen>
   }
 
   void _continue() {
-    if (_currentStep < _steps.length - 1) {
-      setState(() => _currentStep += 1);
-    } else {
+    final isLastStep = _currentStep == _steps.length - 1;
+
+    if (isLastStep) {
       _submitForm();
+    } else {
+      // For the first step (Personal Details)
+      if (_currentStep == 0) {
+        // Save the current form data
+        _formKey.currentState?.save();
+        setState(() {
+          _currentStep += 1;
+        });
+      }
     }
   }
 
@@ -147,11 +195,72 @@ class _CustomerRegistrationScreenState extends State<CustomerRegistrationScreen>
     }
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      // Handle form submission with all collected data
-      print(_formData); // For testing, replace with actual submission logic
+      setState(() => _isLoading = true);
+
+      try {
+        // Create user account with email and password
+        final userCredential = await _auth.createUserWithEmailAndPassword(
+          email: _formData['Email'],
+          password: _formData['Password'],
+        );
+
+        // Store additional user details in Firestore
+        await _firestore.collection('customers').doc(userCredential.user!.uid).set({
+          'fullName': _formData['Full Name'],
+          'phoneNumber': _formData['Phone Number'],
+          'address': _formData['Address'],
+          'email': _formData['Email'],
+          'createdAt': FieldValue.serverTimestamp(),
+          'role': 'customer',
+        });
+
+        // Show success message and navigate
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Registration successful!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // Navigate to customer home screen
+          Navigator.pushReplacementNamed(context, '/customer_home');
+        }
+      } on FirebaseAuthException catch (e) {
+        String errorMessage = 'Registration failed';
+        
+        if (e.code == 'weak-password') {
+          errorMessage = 'The password provided is too weak';
+        } else if (e.code == 'email-already-in-use') {
+          errorMessage = 'An account already exists for this email';
+        } else if (e.code == 'invalid-email') {
+          errorMessage = 'Please enter a valid email address';
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Registration failed: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
     }
   }
 }
