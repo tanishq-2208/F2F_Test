@@ -76,23 +76,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             _buildProfileOption(
               icon: Icons.person_outline,
-              title:
-                  currentLanguage == 'en'
-                      ? 'Edit Profile'
-                      : 'ప్రొఫైల్‌ని సవరించండి',
+              title: currentLanguage == 'en' ? 'Edit Profile' : 'ప్రొఫైల్‌ని సవరించండి',
+              onTap: () {},
+            ),
+            _buildProfileOption(
+              icon: Icons.circle,
+              title: currentLanguage == 'en' ? 'Status' : 'స్థితి',
+              subtitle: currentLanguage == 'en' ? 'Available' : 'అందుబాటులో ఉంది',
               onTap: () {
-                // Navigate to edit profile
+                Navigator.pushNamed(context, '/status');
               },
             ),
             _buildProfileOption(
               icon: Icons.location_on_outlined,
-              title:
-                  currentLanguage == 'en'
-                      ? 'Saved Addresses'
-                      : 'సేవ్ చేసిన చిరునామాలు',
-              onTap: () {
-                // Navigate to addresses
-              },
+              title: currentLanguage == 'en' ? 'Saved Addresses' : 'సేవ్ చేసిన చిరునామాలు',
+              onTap: () {},
             ),
             _buildProfileOption(
               icon: Icons.payment_outlined,

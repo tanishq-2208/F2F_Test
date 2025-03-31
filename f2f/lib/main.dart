@@ -6,6 +6,7 @@ import 'package:f2f/screens/home_screen.dart';
 import 'package:f2f/screens/my_orders_screen.dart';
 import 'package:f2f/screens/products_screen.dart';
 import 'package:f2f/screens/registration_screen.dart';
+import 'package:f2f/screens/status_screen.dart';
 import 'package:f2f/screens/upload_items_screen.dart';
 import 'package:f2f/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
@@ -68,6 +69,7 @@ class MyApp extends StatelessWidget {
       ),
       routes: {
         '/my_orders': (context) => const MyOrdersScreen(),
+        '/status': (context) => const StatusScreen(),  // Add this line
         '/home': (context) => const HomeScreen(),
         '/customer_home': (context) => const CustomerHomeScreen(),
         '/products': (context) => const ProductsPage(),
