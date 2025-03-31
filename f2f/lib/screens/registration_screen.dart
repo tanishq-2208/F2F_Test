@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class RegistrationScreen extends StatefulWidget {
   final String role;
@@ -15,15 +18,24 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
   final Map<String, dynamic> _formData = {};
   int _currentStep = 0;
-
+  
+  // Firebase Auth instance
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  
+  // OTP related variables
+  final TextEditingController _otpController = TextEditingController();
+  bool _isOtpSent = false;
+  bool _isVerifying = false;
+  String? _verificationId;
+  int? _resendToken;
+  String? _phoneNumber;
+  
   Position? _farmLocation;
   PlatformFile? _farmerIdDoc;
   PlatformFile? _passbookDoc;
   PlatformFile? _aadharDoc;
 
-  final List<String> _farmingTypes = [
-    'Vegetables', 'Fruits'
-  ];
+  final List<String> _farmingTypes = ['Vegetables', 'Fruits'];
 
   List<Step> get _steps => [
     Step(
@@ -39,10 +51,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       state: _currentStep > 1 ? StepState.complete : StepState.indexed,
     ),
     Step(
-      title: const Text('Verification', style: TextStyle(fontWeight: FontWeight.bold)),
-      content: _buildVerificationDetails(),
+      title: const Text('Bank Details', style: TextStyle(fontWeight: FontWeight.bold)),
+      content: _buildBankDetails(),
       isActive: _currentStep >= 2,
       state: _currentStep > 2 ? StepState.complete : StepState.indexed,
+    ),
+    Step(
+      title: const Text('Verify OTP', style: TextStyle(fontWeight: FontWeight.bold)),
+      content: _buildOtpVerification(),
+      isActive: _currentStep >= 3,
+      state: _currentStep > 3 ? StepState.complete : StepState.indexed,
     ),
   ];
 
@@ -97,140 +115,33 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
-  Widget _buildVerificationDetails() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Document Verification',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildDocumentUpload('Farmer ID Document', _farmerIdDoc, (file) => setState(() => _farmerIdDoc = file)),
-            _buildDocumentUpload('Farming Passbook', _passbookDoc, (file) => setState(() => _passbookDoc = file)),
-            _buildDocumentUpload('Aadhar Card (Optional)', _aadharDoc, (file) => setState(() => _aadharDoc = file)),
-            const SizedBox(height: 16),
-            const Text(
-              'Bank Details',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: 'Bank Account Number',
-                prefixIcon: const Icon(Icons.account_balance, color: Colors.green),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.green.shade800, width: 2),
-                ),
-                filled: true,
-                fillColor: Colors.white,
-              ),
-              validator: (value) => value?.isEmpty ?? true ? 'Please enter bank account number' : null,
-              onSaved: (value) => _formData['Bank Account Number'] = value,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: 'Account Holder Name',
-                prefixIcon: const Icon(Icons.person, color: Colors.green),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.green.shade800, width: 2),
-                ),
-                filled: true,
-                fillColor: Colors.white,
-              ),
-              validator: (value) => value?.isEmpty ?? true ? 'Please enter account holder name' : null,
-              onSaved: (value) => _formData['Account Holder Name'] = value,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: 'Bank Name',
-                prefixIcon: const Icon(Icons.business, color: Colors.green),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.green.shade800, width: 2),
-                ),
-                filled: true,
-                fillColor: Colors.white,
-              ),
-              validator: (value) => value?.isEmpty ?? true ? 'Please enter bank name' : null,
-              onSaved: (value) => _formData['Bank Name'] = value,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: 'IFSC Code',
-                prefixIcon: const Icon(Icons.code, color: Colors.green),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.green.shade800, width: 2),
-                ),
-                filled: true,
-                fillColor: Colors.white,
-              ),
-              validator: (value) => value?.isEmpty ?? true ? 'Please enter IFSC code' : null,
-              onSaved: (value) => _formData['IFSC Code'] = value,
-            ),
-          ],
-        ),
-      ),
-    );
+  void _continue() {
+    // Don't validate the entire form, just proceed to next step
+    if (_currentStep < _steps.length - 1) {
+      // Save any data entered so far
+      _formKey.currentState!.save();
+      
+      setState(() => _currentStep += 1);
+      
+      // If moving to OTP step, send OTP automatically
+      if (_currentStep == 3 && !_isOtpSent) {
+        _sendOtp();
+      }
+    } else {
+      // Validate and submit on final step
+      if (_formKey.currentState!.validate()) {
+        _formKey.currentState!.save();
+        _submitForm();
+      }
+    }
   }
 
-  Widget _buildControls(BuildContext context, ControlsDetails details) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: Row(
-        children: [
-          if (_currentStep != 0)
-            TextButton.icon(
-              onPressed: details.onStepCancel,
-              icon: const Icon(Icons.arrow_back),
-              label: const Text('BACK'),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.green.shade800,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              ),
-            ),
-          const Spacer(),
-          ElevatedButton.icon(
-            onPressed: details.onStepContinue,
-            icon: Icon(_currentStep == _steps.length - 1 ? Icons.check : Icons.arrow_forward),
-            label: Text(_currentStep == _steps.length - 1 ? 'SUBMIT' : 'NEXT'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green.shade800,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  void _cancel() {
+    if (_currentStep > 0) {
+      setState(() => _currentStep -= 1);
+    }
   }
-  
+
   Widget _buildPersonalDetails() {
     return Card(
       elevation: 2,
@@ -278,8 +189,19 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 fillColor: Colors.white,
               ),
               keyboardType: TextInputType.phone,
-              validator: (value) => value?.isEmpty ?? true ? 'Please enter your phone number' : null,
-              onSaved: (value) => _formData['Phone Number'] = value,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your phone number';
+                }
+                if (value.length != 10) {
+                  return 'Please enter a valid 10-digit phone number';
+                }
+                return null;
+              },
+              onSaved: (value) {
+                _formData['Phone Number'] = value;
+                _phoneNumber = '+91${value!.trim()}'; // Ensure proper formatting
+              },
             ),
           ],
         ),
@@ -395,6 +317,207 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
+  Widget _buildBankDetails() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Bank Details',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: 'Bank Account Number',
+                prefixIcon: const Icon(Icons.account_balance, color: Colors.green),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.green.shade800, width: 2),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+              validator: (value) => value?.isEmpty ?? true ? 'Please enter bank account number' : null,
+              onSaved: (value) => _formData['Bank Account Number'] = value,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: 'Account Holder Name',
+                prefixIcon: const Icon(Icons.person, color: Colors.green),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.green.shade800, width: 2),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+              validator: (value) => value?.isEmpty ?? true ? 'Please enter account holder name' : null,
+              onSaved: (value) => _formData['Account Holder Name'] = value,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: 'Bank Name',
+                prefixIcon: const Icon(Icons.business, color: Colors.green),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.green.shade800, width: 2),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+              validator: (value) => value?.isEmpty ?? true ? 'Please enter bank name' : null,
+              onSaved: (value) => _formData['Bank Name'] = value,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: 'IFSC Code',
+                prefixIcon: const Icon(Icons.code, color: Colors.green),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.green.shade800, width: 2),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+              validator: (value) => value?.isEmpty ?? true ? 'Please enter IFSC code' : null,
+              onSaved: (value) => _formData['IFSC Code'] = value,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOtpVerification() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Phone Verification',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'We have sent a verification code to your phone number. Please enter the code below to verify your account.',
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+            const SizedBox(height: 24),
+            TextFormField(
+              controller: _otpController,
+              decoration: InputDecoration(
+                labelText: 'Enter OTP',
+                prefixIcon: const Icon(Icons.security, color: Colors.green),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.green.shade800, width: 2),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              validator: (value) => value?.isEmpty ?? true ? 'Please enter the OTP' : null,
+            ),
+            const SizedBox(height: 16),
+            if (!_isOtpSent)
+              Center(
+                child: ElevatedButton.icon(
+                  onPressed: _isVerifying ? null : _sendOtp,
+                  icon: _isVerifying 
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send),
+                  label: Text(_isVerifying ? 'Sending...' : 'Send OTP'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade800,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              )
+            else
+              Center(
+                child: TextButton.icon(
+                  onPressed: _isVerifying ? null : _resendOtp,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Resend OTP'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.green.shade800,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildControls(BuildContext context, ControlsDetails details) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      child: Row(
+        children: [
+          if (_currentStep != 0)
+            TextButton.icon(
+              onPressed: details.onStepCancel,
+              icon: const Icon(Icons.arrow_back),
+              label: const Text('BACK'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.green.shade800,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+            ),
+          const Spacer(),
+          ElevatedButton.icon(
+            onPressed: details.onStepContinue,
+            icon: Icon(_currentStep == _steps.length - 1 ? Icons.check : Icons.arrow_forward),
+            label: Text(_currentStep == _steps.length - 1 ? 'SUBMIT' : 'NEXT'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green.shade800,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDocumentUpload(String label, PlatformFile? file, Function(PlatformFile?) onFilePicked) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -456,42 +579,222 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
-  void _continue() {
-    if (_currentStep < _steps.length - 1) {
-      setState(() => _currentStep += 1);
-    } else {
-      _submitForm();
+  Future<void> _sendOtp() async {
+    // Ensure phone number is properly formatted
+    if (_formData['Phone Number'] == null || _formData['Phone Number']!.isEmpty) {
+      setState(() => _currentStep = 0);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your phone number first')),
+      );
+      return;
     }
-  }
 
-  void _cancel() {
-    if (_currentStep > 0) {
-      setState(() => _currentStep -= 1);
+    // Format phone number with country code
+    _phoneNumber = '+91${_formData['Phone Number']!.trim()}';
+    
+    // Validate phone number format
+    if (!RegExp(r'^\+91[0-9]{10}$').hasMatch(_phoneNumber!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid 10-digit Indian phone number')),
+      );
+      return;
     }
-  }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      // Show success dialog
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-            title: const Text('Registration Successful'),
-            content: const Text('Your registration has been submitted successfully. We will review your details and get back to you soon.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/farmer_login');
-                },
-                child: const Text('Go to Login'),
-              ),
-            ],
+    setState(() => _isVerifying = true);
+
+    try {
+      await _auth.verifyPhoneNumber(
+        phoneNumber: _phoneNumber!,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          await _auth.signInWithCredential(credential);
+          setState(() {
+            _isVerifying = false;
+            _isOtpSent = true;
+            _otpController.text = credential.smsCode ?? '';
+          });
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          setState(() => _isVerifying = false);
+          String errorMessage = 'Verification failed (${e.code}). Please try again.';
+          
+          // Enhanced error mapping
+          switch (e.code) {
+            case 'invalid-phone-number':
+              errorMessage = 'Invalid phone number format. Please enter a valid 10-digit Indian number.';
+              break;
+            case 'quota-exceeded':
+              errorMessage = 'Daily OTP limit reached. Try again tomorrow.';
+              break;
+            case 'too-many-requests':
+              errorMessage = 'Too many attempts. Please wait before trying again.';
+              break;
+            case 'app-not-authorized':
+              errorMessage = 'App not configured for phone auth. Contact support.';
+              break;
+            case 'missing-client-identifier':
+              errorMessage = 'Firebase configuration issue. Reinstall app.';
+              break;
+          }
+          
+          // Log the full error for debugging
+          debugPrint('OTP Error: ${e.code} - ${e.message}');
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(errorMessage)),
           );
         },
+        codeSent: (String verificationId, int? resendToken) {
+          setState(() {
+            _isVerifying = false;
+            _isOtpSent = true;
+            _verificationId = verificationId;
+            _resendToken = resendToken;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('OTP sent successfully!')),
+          );
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          _verificationId = verificationId;
+        },
+        timeout: const Duration(seconds: 60),
       );
+    } catch (e) {
+      setState(() => _isVerifying = false);
+      debugPrint('OTP Exception: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unexpected error occurred. Please try again.')),
+      );
+    }
+  }
+
+  Future<void> _resendOtp() async {
+    setState(() => _isVerifying = true);
+    
+    try {
+      await _auth.verifyPhoneNumber(
+        phoneNumber: _phoneNumber!,
+        forceResendingToken: _resendToken,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          await _auth.signInWithCredential(credential);
+          setState(() {
+            _isVerifying = false;
+            _otpController.text = credential.smsCode ?? '';
+          });
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          setState(() => _isVerifying = false);
+          String errorMessage = 'Verification failed. Please try again.';
+          if (e.code == 'invalid-phone-number') {
+            errorMessage = 'Invalid phone number format';
+          } else if (e.code == 'quota-exceeded') {
+            errorMessage = 'OTP quota exceeded. Try again later.';
+          } else if (e.code == 'too-many-requests') {
+            errorMessage = 'Too many requests. Please try again later.';
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(errorMessage)),
+          );
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          setState(() {
+            _isVerifying = false;
+            _verificationId = verificationId;
+            _resendToken = resendToken;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('OTP resent successfully!')),
+          );
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          _verificationId = verificationId;
+        },
+        timeout: const Duration(seconds: 60),
+      );
+    } catch (e) {
+      setState(() => _isVerifying = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error resending OTP: ${e.toString()}')),
+      );
+    }
+  }
+
+  Future<void> _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      
+      if (_otpController.text.length != 6) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a valid 6-digit OTP')),
+        );
+        return;
+      }
+
+      setState(() => _isVerifying = true);
+      
+      try {
+        PhoneAuthCredential credential = PhoneAuthProvider.credential(
+          verificationId: _verificationId!,
+          smsCode: _otpController.text,
+        );
+        
+        UserCredential userCredential = await _auth.signInWithCredential(credential);
+        
+        Map<String, dynamic> userData = {
+          'name': _formData['Full Name'],
+          'phoneNumber': _formData['Phone Number'],
+          'role': widget.role,
+          'farmDetails': {
+            'location': _farmLocation != null ? 
+                GeoPoint(_farmLocation!.latitude, _farmLocation!.longitude) : null,
+            'landArea': _formData['Land Area'],
+            'farmingType': _formData['Farming Type'],
+            'yearsOfExperience': _formData['Years of Experience'],
+          },
+          'bankDetails': {
+            'accountNumber': _formData['Bank Account Number'],
+            'accountHolderName': _formData['Account Holder Name'],
+            'bankName': _formData['Bank Name'],
+            'ifscCode': _formData['IFSC Code'],
+          },
+          'isVerified': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        };
+        
+        await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set(userData);
+        
+        setState(() => _isVerifying = false);
+        
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+              title: const Text('Registration Successful'),
+              content: const Text('Your registration has been submitted successfully. We will review your details and get back to you soon.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/farmer_login');
+                  },
+                  child: const Text('Go to Login'),
+                ),
+              ],
+            );
+          },
+        );
+      } on FirebaseAuthException catch (e) {
+        setState(() => _isVerifying = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Authentication failed: ${e.message}')),
+        );
+      } catch (e) {
+        setState(() => _isVerifying = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 }

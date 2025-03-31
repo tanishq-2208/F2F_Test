@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FarmerLoginScreen extends StatefulWidget {
   const FarmerLoginScreen({super.key});
@@ -12,6 +14,10 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
   final _phoneController = TextEditingController();
   final _otpController = TextEditingController();
   bool _otpSent = false;
+  bool _isLoading = false;
+  String? _verificationId;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void dispose() {
@@ -20,27 +26,102 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
     super.dispose();
   }
 
-  void _sendOtp() {
-    // Here you would implement OTP sending logic
-    setState(() {
-      _otpSent = true;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('OTP sent to your phone number'),
-        backgroundColor: Colors.green,
-      ),
-    );
+  Future<void> _sendOtp() async {
+    if (_phoneController.text.length != 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid 10-digit number')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    final phoneNumber = '+91${_phoneController.text.trim()}';
+
+    // Check if number is registered in 'users' collection
+    final doc = await _firestore
+        .collection('users')
+        .where('phoneNumber', isEqualTo: _phoneController.text.trim())
+        .limit(1)
+        .get();
+
+    if (doc.docs.isEmpty) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This number is not registered. Please register first.')),
+      );
+      return;
+    }
+
+    try {
+      await _auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          await _auth.signInWithCredential(credential);
+          _navigateToHome();
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${e.message}')),
+          );
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          setState(() {
+            _isLoading = false;
+            _otpSent = true;
+            _verificationId = verificationId;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('OTP sent successfully')),
+          );
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          _verificationId = verificationId;
+        },
+        timeout: const Duration(seconds: 60),
+      );
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
-  void _verifyOtp() {
-    // Here you would implement OTP verification logic
-    Navigator.pushNamed(context, '/home');
+  Future<void> _verifyOtp() async {
+    if (_otpController.text.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid 6-digit OTP')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: _verificationId!,
+        smsCode: _otpController.text.trim(),
+      );
+      await _auth.signInWithCredential(credential);
+      _navigateToHome();
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Invalid OTP. Please try again')),
+      );
+    }
+  }
+
+  void _navigateToHome() {
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      '/home',
+      (route) => false,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Get screen size
     final Size screenSize = MediaQuery.of(context).size;
     final double height = screenSize.height;
     final double width = screenSize.width;
@@ -195,7 +276,7 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
 
                           // Action button
                           ElevatedButton(
-                            onPressed: _otpSent ? _verifyOtp : _sendOtp,
+                            onPressed: _isLoading ? null : _otpSent ? _verifyOtp : _sendOtp,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green.shade800,
                               foregroundColor: Colors.white,
@@ -204,15 +285,16 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
-                            child: Text(
-                              _otpSent ? 'Verify OTP' : 'Send OTP',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            child: _isLoading
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : Text(
+                                    _otpSent ? 'Verify OTP' : 'Send OTP',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                ),
                             ),
-                          ),
-
                           // Registration option
                           const SizedBox(height: 20),
                           Row(
