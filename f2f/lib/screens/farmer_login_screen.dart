@@ -181,7 +181,7 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen> {
                                       child: Text(
                                         'Resend OTP',
                                         style: TextStyle(
-                                          color: Colors.green.shade800,
+                                          color: Colors.green.shade800,//hi
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
