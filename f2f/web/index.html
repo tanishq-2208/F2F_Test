@@ -12,7 +12,7 @@
     * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
 
     This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
+    the --base-href argument provided to flutter build.
   -->
   <base href="$FLUTTER_BASE_HREF">
 
@@ -31,8 +31,25 @@
 
   <title>f2f</title>
   <link rel="manifest" href="manifest.json">
+  
+  <!-- Add reCAPTCHA script -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
+  
+  <!-- Add a div for reCAPTCHA -->
+  <div id="recaptcha"></div>
+  
+  <script>
+    // Your existing Firebase configuration
+    var firebaseConfig = {
+      // Your Firebase config values
+    };
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
 </body>
-</html>
+</html>//hi
