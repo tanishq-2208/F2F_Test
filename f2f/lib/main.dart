@@ -1,4 +1,6 @@
 import 'package:f2f/screens/customer_home_screen.dart';
+import 'package:f2f/screens/customer_login_screen.dart';
+import 'package:f2f/screens/customer_registration_screen.dart';
 import 'package:f2f/screens/farmer_login_screen.dart';
 import 'package:f2f/screens/home_screen.dart';
 import 'package:f2f/screens/my_orders_screen.dart';
@@ -74,7 +76,7 @@ class MyApp extends StatelessWidget {
             (context) => const RegistrationScreen(role: 'farmer'),
         '/farmer_login': (context) => const FarmerLoginScreen(),
       },
-      home:  const FarmerLoginScreen(),
+      home:  const CustomerLoginScreen(),
     );
   }
 }
