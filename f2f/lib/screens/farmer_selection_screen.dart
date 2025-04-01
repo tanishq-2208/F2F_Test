@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
-import '../models/farmer.dart';
-import '../services/farmer_service.dart';
-import '../widgets/rating_stars.dart';
-import 'checkout_screen.dart';
-import '../widgets/customer_bottom_navigation_bar.dart';
-import 'customer_home_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import '../services/language_service.dart';
 
 class FarmerSelectionScreen extends StatefulWidget {
   final String productName;
-  final String productCategory;
 
   const FarmerSelectionScreen({
     super.key,
-    required this.productName,
-    required this.productCategory,
+    required this.productName, required String productCategory,
   });
 
   @override
@@ -21,314 +16,190 @@ class FarmerSelectionScreen extends StatefulWidget {
 }
 
 class _FarmerSelectionScreenState extends State<FarmerSelectionScreen> {
-  List<Farmer> _farmers = [];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool _isLoading = true;
+  List<Map<String, dynamic>> _farmers = [];
 
   @override
   void initState() {
     super.initState();
-    _loadFarmers();
+    _fetchFarmersWithProduct();
   }
 
-  Future<void> _loadFarmers() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+  Future<void> _fetchFarmersWithProduct() async {
     try {
-      // Fetch farmers selling this product
-      final farmers = await FarmerService.getFarmersByProduct(
-        widget.productName,
-        widget.productCategory,
-      );
-      
-      // Sort by rating (highest first)
-      farmers.sort((a, b) => b.rating.compareTo(a.rating));
-      
+      final querySnapshot = await _firestore
+          .collection('sales')
+          .orderBy('date', descending: true)
+          .get();
+
+      final Map<String, Map<String, dynamic>> farmersMap = {};
+
+      for (var doc in querySnapshot.docs) {
+        final data = doc.data();
+        final farmerId = data['farmerId']?.toString() ?? '';
+        final farmerName = data['farmerName']?.toString() ?? 'Unknown Farmer';
+
+        if (farmerId.isEmpty) continue;
+
+        if (data['items'] is List) {
+          for (var item in data['items']) {
+            if (item is Map) {
+              final itemName = item['name']?.toString().trim() ?? '';
+              
+              // Only process items matching the product we're looking for
+              if (itemName.toLowerCase() == widget.productName.toLowerCase()) {
+                if (!farmersMap.containsKey(farmerId)) {
+                  farmersMap[farmerId] = {
+                    'farmerId': farmerId,
+                    'farmerName': farmerName,
+                    'totalQuantity': 0.0,
+                    'pricePerUnit': 0.0,
+                    'unit': 'kg',
+                  };
+                }
+
+                // Update the farmer's total quantity and price
+                final quantity = (item['quantity'] is num)
+                    ? (item['quantity'] as num).toDouble()
+                    : double.tryParse(item['quantity']?.toString() ?? '0') ?? 0;
+                
+                final price = (item['price'] is num)
+                    ? (item['price'] as num).toDouble()
+                    : double.tryParse(item['price']?.toString() ?? '0') ?? 0;
+                
+                final unit = item['unit']?.toString().toLowerCase() ?? 'kg';
+
+                farmersMap[farmerId]!['totalQuantity'] += quantity;
+                farmersMap[farmerId]!['pricePerUnit'] = price; // Use the latest price
+                farmersMap[farmerId]!['unit'] = unit;
+              }
+            }
+          }
+        }
+      }
+
       setState(() {
-        _farmers = farmers;
+        _farmers = farmersMap.values.toList();
         _isLoading = false;
       });
+
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      // Handle error
+      print('Error fetching farmers data: $e');
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching data: $e')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final languageService = Provider.of<LanguageService>(context);
+    final currentLanguage = languageService.currentLocale.languageCode;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Select Farmer for ${widget.productName}'),
+        title: Text(
+          currentLanguage == 'en' 
+              ? 'Select Farmer for ${widget.productName}'
+              : '${widget.productName} కోసం రైతును ఎంచుకోండి',
+        ),
+        backgroundColor: Colors.green.shade800,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _farmers.isEmpty
-              ? _buildEmptyState()
-              : _buildFarmersList(),
-      // Bottom navigation bar removed
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.sentiment_dissatisfied,
-            size: 80,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No farmers available for ${widget.productName}',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[600],
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('Go Back'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFarmersList() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _farmers.length,
-      itemBuilder: (context, index) {
-        final farmer = _farmers[index];
-        final isTopRated = index == 0;
-        
-        return Card(
-          elevation: 3,
-          margin: const EdgeInsets.only(bottom: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: isTopRated
-                ? BorderSide(color: Colors.green[700]!, width: 2)
-                : BorderSide.none,
-          ),
-          child: InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CheckoutScreen(
-                    productName: widget.productName,
-                    farmer: farmer,
+              ? Center(
+                  child: Text(
+                    currentLanguage == 'en'
+                        ? 'No farmers available for ${widget.productName}'
+                        : '${widget.productName} కోసం రైతులు అందుబాటులో లేరు',
                   ),
-                ),
-              );
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundImage: NetworkImage(farmer.profileImageUrl),
-                        backgroundColor: Colors.grey[200],
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _farmers.length,
+                  itemBuilder: (context, index) {
+                    final farmer = _farmers[index];
+                    final quantity = farmer['totalQuantity'] ?? 0;
+                    final price = farmer['pricePerUnit'] ?? 0;
+                    final unit = farmer['unit'] ?? 'kg';
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text(
+                              farmer['farmerName'] as String,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
                             Row(
                               children: [
-                                Text(
-                                  farmer.name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                                if (isTopRated) ...[
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green[100],
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.thumb_up,
-                                          size: 14,
-                                          color: Colors.green[700],
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          'Top Rated',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.green[700],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                                Icon(Icons.star_border, color: Colors.amber, size: 18),
+                                Icon(Icons.star_border, color: Colors.amber, size: 18),
+                                Icon(Icons.star_border, color: Colors.amber, size: 18),
+                                Icon(Icons.star_border, color: Colors.amber, size: 18),
+                                Icon(Icons.star_border, color: Colors.amber, size: 18),
+                                const SizedBox(width: 4),
+                                const Text('(0)'),
                               ],
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 12),
+                            Text(
+                              '${currentLanguage == 'en' ? 'Available' : 'అందుబాటులో'}: $quantity $unit',
+                            ),
+                            const SizedBox(height: 8),
                             Row(
                               children: [
-                                RatingStars(rating: farmer.rating),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '(${farmer.reviewCount})',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 14,
+                                const Spacer(),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.shade100,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Text(
+                                    '₹${price.toStringAsFixed(0)}/$unit',
+                                    style: TextStyle(
+                                      color: Colors.green.shade800,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ],
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  // Handle buy now action
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green[700],
+                                ),
+                                child: Text(
+                                  currentLanguage == 'en' ? 'Buy Now' : 'ఇప్పుడే కొనండి',
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      _buildInfoChip(
-                        Icons.location_on,
-                        '${farmer.distance.toStringAsFixed(1)} km',
-                      ),
-                      const SizedBox(width: 12),
-                      _buildInfoChip(
-                        Icons.access_time,
-                        '${farmer.deliveryTime} min',
-                      ),
-                      const SizedBox(width: 12),
-                      _buildInfoChip(
-                        Icons.monetization_on,
-                        '₹${farmer.price}/${farmer.unit}',
-                        isHighlighted: true,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Available: ${farmer.quantity} ${farmer.unit}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                    ),
-                  ),
-                  if (farmer.offerText != null) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.orange[50],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.orange[200]!),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.local_offer,
-                            size: 16,
-                            color: Colors.orange[800],
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              farmer.offerText!,
-                              style: TextStyle(
-                                color: Colors.orange[800],
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CheckoutScreen(
-                              productName: widget.productName,
-                              farmer: farmer,
-                            ),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        backgroundColor: Colors.green[700],
-                      ),
-                      child: const Text('Buy Now'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildInfoChip(IconData icon, String text, {bool isHighlighted = false}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: isHighlighted ? Colors.green[50] : Colors.grey[100],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isHighlighted ? Colors.green[200]! : Colors.grey[300]!,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 14,
-            color: isHighlighted ? Colors.green[700] : Colors.grey[700],
-          ),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isHighlighted ? FontWeight.bold : FontWeight.normal,
-              color: isHighlighted ? Colors.green[700] : Colors.grey[700],
-            ),
-          ),
-        ],
-      ),
+                    );
+                  },
+                ),
     );
   }
 }

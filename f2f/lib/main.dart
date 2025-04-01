@@ -78,7 +78,7 @@ class MyApp extends StatelessWidget {
             (context) => const RegistrationScreen(role: 'farmer'),
         '/farmer_login': (context) => const FarmerLoginScreen(),
       },
-      home:  const CustomerLoginScreen(),
+      home:  const CustomerHomeScreen(),
     );
   }
 }
