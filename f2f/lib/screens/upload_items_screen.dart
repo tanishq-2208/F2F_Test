@@ -95,7 +95,7 @@ class _UploadItemsScreenState extends State<UploadItemsScreen> {
           Navigator.pushReplacementNamed(context, '/home');
           break;
         case 1:
-          Navigator.pushReplacementNamed(context, '/plant_analysis');
+          Navigator.pushReplacementNamed(context, '/PlantAnalysisScreen()');
           break;
         case 2:
           // Already on the sell page

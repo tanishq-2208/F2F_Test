@@ -3,6 +3,8 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../models/product.dart';
 import '../services/product_service.dart';
 import '../screens/farmer_selection_screen.dart';
+import '../widgets/customer_bottom_navigation_bar.dart';
+import 'reel_screen.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -12,6 +14,33 @@ class CustomerHomeScreen extends StatefulWidget {
 }
 
 class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
+  // Add this variable with other state variables
+  int _selectedIndex = 0;
+
+  // Add this method
+  // Fix the navigation method
+  void _onNavigationItemSelected(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    
+    // Navigation logic
+    switch (index) {
+      case 0: // Home
+        // Already on home screen
+        break;
+      case 1: // Reels
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ReelScreen()),
+        );
+        break;
+      case 2: // Orders
+        Navigator.pushNamed(context, '/my_orders');
+        break;
+    }
+  }
+
   final PageController _bannerController = PageController();
   String _selectedCategory = 'Fruits';
   List<Product> _products = [];
@@ -61,22 +90,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Farm2Fork Market'),
-        // In the AppBar actions of CustomerHomeScreen
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.receipt_long),
-            onPressed: () {
-              Navigator.pushNamed(context, '/my_orders');
-            },
-            tooltip: 'My Orders',
-          ),
-          IconButton(
-            icon: const Icon(Icons.shopping_cart),
-            onPressed: () {
-              // Navigate to cart
-            },
-          ),
-        ],
+        // Removed the action icons from here
       ),
       body: RefreshIndicator(
         onRefresh: _loadProducts,
@@ -103,6 +117,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: CustomerBottomNavigationBar(
+        selectedIndex: _selectedIndex,
+        onItemSelected: _onNavigationItemSelected,
+      ),
     );
   }
 
@@ -112,7 +130,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         SizedBox(
           height: 180,
           child: PageView.builder(
-            controller: _bannerController,
+            controller: _bannerController, // Fix: Changed from bannerController to _bannerController
             itemCount: _bannerImages.length,
             itemBuilder: (context, index) {
               return Container(
@@ -270,80 +288,45 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Product Image
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                image: DecorationImage(
-                  image: NetworkImage(product.imageUrl),
-                  fit: BoxFit.cover,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Image.network(
+              product.imageUrl,
+              height: 100,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              product.name,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const Spacer(),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FarmerSelectionScreen(
+                        productName: product.name,
+                        productCategory: product.category,
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green[700],
                 ),
+                child: const Text('Buy Now'),
               ),
             ),
-          ),
-          
-          // Product Details
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  product.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '₹${product.price} / ${product.unit}',
-                  style: const TextStyle(
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Available: ${product.quantity} ${product.unit}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Navigate to farmer selection screen
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FarmerSelectionScreen(
-                            productName: product.name,
-                            productCategory: product.category,
-                          ),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      backgroundColor: Colors.green[700],
-                    ),
-                    child: const Text('Buy'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

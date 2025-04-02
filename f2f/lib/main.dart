@@ -1,21 +1,22 @@
 import 'package:f2f/screens/customer_home_screen.dart';
+import 'package:f2f/screens/customer_login_screen.dart';
+import 'package:f2f/screens/customer_registration_screen.dart';
 import 'package:f2f/screens/farmer_login_screen.dart';
 import 'package:f2f/screens/home_screen.dart';
 import 'package:f2f/screens/my_orders_screen.dart';
+import 'package:f2f/screens/products_screen.dart';
 import 'package:f2f/screens/plant_analysis_screen.dart';
-import 'package:f2f/screens/plant_scanner_screen.dart';
 import 'package:f2f/screens/registration_screen.dart';
+import 'package:f2f/screens/status_screen.dart';
 import 'package:f2f/screens/upload_items_screen.dart';
 import 'package:f2f/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
-import 'screens/products_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:f2f/services/language_service.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:f2f/providers/language_provider.dart';
-// Add imports for the missing screens
 import 'package:f2f/screens/profile_screen.dart';
 import 'package:f2f/screens/ai_search_screen.dart';
 
@@ -76,15 +77,16 @@ class MyApp extends StatelessWidget {
             '/my_orders': (context) => const MyOrdersScreen(),
             '/home': (context) => const HomeScreen(),
             '/customer_home': (context) => const CustomerHomeScreen(),
-            '/products': (context) => const ProductsPage(),
+            // Remove the static route for products since it needs a dynamic parameter
             '/upload_items': (context) => const UploadItemsScreen(),
             '/farmer_register':
                 (context) => const RegistrationScreen(role: 'farmer'),
             '/farmer_login': (context) => const FarmerLoginScreen(),
             '/plant_analysis': (context) => const PlantAnalysisScreen(),
-            // Add the missing routes
+            '/status': (context) => const StatusScreen(),
             '/profile': (context) => const ProfileScreen(),
-            '/ai': (context) => const AISearchScreen(
+            '/ai':
+                (context) => const AISearchScreen(
                   diseaseName: 'General',
                   searchType: 'information',
                 ),

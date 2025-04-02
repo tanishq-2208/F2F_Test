@@ -2,6 +2,7 @@ import 'package:f2f/widgets/farmer_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:f2f/providers/language_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -11,56 +12,56 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  int _selectedIndex = 3;
-
-  void _onItemTapped(int index) {
-    if (index != _selectedIndex) {
-      setState(() {
-        _selectedIndex = index;
-      });
-
-      // Handle navigation based on the selected index
-      switch (index) {
-        case 0:
-          Navigator.pushReplacementNamed(context, '/home');
-          break;
-        case 1:
-          Navigator.pushReplacementNamed(context, '/plant_analysis');
-          break;
-        case 2:
-          Navigator.pushReplacementNamed(context, '/upload_items');
-          break;
-        case 3:
-          // Already on profile page
-          break;
-      }
-    }
-  }
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
-    // Get language provider
+    final user = _auth.currentUser;
     final languageProvider = Provider.of<LanguageProvider>(context);
     final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
+    int selectedIndex = 3;
+
+    void onItemTapped(int index) {
+      if (index != selectedIndex) {
+        setState(() {
+          selectedIndex = index;
+        });
+
+        // Handle navigation based on the selected index
+        switch (index) {
+          case 0:
+            Navigator.pushReplacementNamed(context, '/home');
+            break;
+          case 1:
+            Navigator.pushReplacementNamed(context, '/plant_analysis');
+            break;
+          case 2:
+            Navigator.pushReplacementNamed(context, '/upload_items');
+            break;
+          case 3:
+            // Already on profile page
+            break;
+        }
+      }
+    }
 
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text(isTeluguSelected ? 'ప్రొఫైల్' : 'Profile'),
+        title: Text(
+          isTeluguSelected ? 'ప్రొఫైల్' : 'Profile',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.green.shade800,
         elevation: 0,
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
+            // Profile header
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              decoration: BoxDecoration(
-                color: Colors.green.shade800,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-              ),
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              color: Colors.green.shade800,
               child: Center(
                 child: Column(
                   children: [
@@ -68,175 +69,133 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       radius: 50,
                       backgroundImage: AssetImage('assets/images/farmer.png'),
                     ),
-                    const SizedBox(height: 16),
+
+                    const SizedBox(height: 12),
                     Text(
-                      isTeluguSelected ? 'రాజు రెడ్డి' : 'Usham Reddy',
+                      user?.displayName ?? 'Farmer User',
                       style: const TextStyle(
-                        fontSize: 24,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Text(
-                      isTeluguSelected ? 'రైతు' : 'Farmer',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
-                      ),
+                      user?.email ?? 'farmer@example.com',
+                      style: const TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ],
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isTeluguSelected
-                            ? 'వ్యక్తిగత సమాచారం'
-                            : 'Personal Information',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green.shade800,
-                        ),
-                      ),
-                      const Divider(),
-                      _buildInfoRow(
-                        Icons.phone,
-                        isTeluguSelected ? 'ఫోన్' : 'Phone',
-                        '+91 9876543210',
-                      ),
-                      _buildInfoRow(
-                        Icons.location_on,
-                        isTeluguSelected ? 'చిరునామా' : 'Address',
-                        isTeluguSelected
-                            ? 'గ్రామం: రాజుపాలెం, మండలం: కొత్తపల్లి,\nజిల్లా: గుంటూరు, ఆంధ్రప్రదేశ్'
-                            : 'Village: Rajupalem, Mandal: Kottapalli,\nDistrict: Guntur, Andhra Pradesh',
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+
+            // Profile options
+            const SizedBox(height: 16),
+            _buildSectionHeader(
+              isTeluguSelected ? 'ఖాతా సెట్టింగ్‌లు' : 'Account Settings',
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isTeluguSelected ? 'వ్యవసాయ వివరాలు' : 'Farm Details',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green.shade800,
-                        ),
-                      ),
-                      const Divider(),
-                      _buildInfoRow(
-                        Icons.landscape,
-                        isTeluguSelected ? 'భూమి పరిమాణం' : 'Land Size',
-                        isTeluguSelected ? '5 ఎకరాలు' : '5 Acres',
-                      ),
-                      _buildInfoRow(
-                        Icons.water_drop,
-                        isTeluguSelected
-                            ? 'నీటిపారుదల వనరులు'
-                            : 'Irrigation Sources',
-                        isTeluguSelected
-                            ? 'బోరు బావి, చెరువు'
-                            : 'Bore Well, Pond',
-                      ),
-                      _buildInfoRow(
-                        Icons.eco,
-                        isTeluguSelected ? 'ప్రధాన పంటలు' : 'Main Crops',
-                        isTeluguSelected
-                            ? 'వరి, పత్తి, కూరగాయలు'
-                            : 'Rice, Cotton, Vegetables',
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            _buildProfileOption(
+              icon: Icons.person_outline,
+              title:
+                  isTeluguSelected ? 'ప్రొఫైల్‌ని సవరించండి' : 'Edit Profile',
+              onTap: () {},
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isTeluguSelected ? 'అమ్మకాల చరిత్ర' : 'Sales History',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green.shade800,
-                        ),
-                      ),
-                      const Divider(),
-                      _buildSaleItem(
-                        isTeluguSelected ? 'టమాటా' : 'Tomatoes',
-                        isTeluguSelected ? '50 కిలోలు' : '50 kg',
-                        '₹2,500',
-                        isTeluguSelected ? '15 రోజుల క్రితం' : '15 days ago',
-                      ),
-                      _buildSaleItem(
-                        isTeluguSelected ? 'వంగ' : 'Eggplant',
-                        isTeluguSelected ? '30 కిలోలు' : '30 kg',
-                        '₹1,800',
-                        isTeluguSelected ? '20 రోజుల క్రితం' : '20 days ago',
-                      ),
-                      _buildSaleItem(
-                        isTeluguSelected ? 'బంగాళాదుంప' : 'Potatoes',
-                        isTeluguSelected ? '100 కిలోలు' : '100 kg',
-                        '₹3,000',
-                        isTeluguSelected ? '1 నెల క్రితం' : '1 month ago',
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            _buildProfileOption(
+              icon: Icons.circle,
+              title: isTeluguSelected ? 'స్థితి' : 'Status',
+              subtitle: isTeluguSelected ? 'అందుబాటులో ఉంది' : 'Available',
+              onTap: () {
+                Navigator.pushNamed(context, '/status');
+              },
             ),
+            _buildProfileOption(
+              icon: Icons.location_on_outlined,
+              title:
+                  isTeluguSelected
+                      ? 'సేవ్ చేసిన చిరునామాలు'
+                      : 'Saved Addresses',
+              onTap: () {},
+            ),
+            _buildProfileOption(
+              icon: Icons.payment_outlined,
+              title:
+                  isTeluguSelected ? 'చెల్లింపు పద్ధతులు' : 'Payment Methods',
+              onTap: () {
+                // Navigate to payment methods
+              },
+            ),
+
+            const SizedBox(height: 16),
+            _buildSectionHeader(
+              isTeluguSelected ? 'ప్రాధాన్యతలు' : 'Preferences',
+            ),
+            _buildLanguageOption(context, languageProvider, isTeluguSelected),
+            _buildProfileOption(
+              icon: Icons.notifications_outlined,
+              title: isTeluguSelected ? 'నోటిఫికేషన్లు' : 'Notifications',
+              onTap: () {
+                // Navigate to notifications
+              },
+            ),
+
+            const SizedBox(height: 16),
+            _buildSectionHeader(
+              isTeluguSelected
+                  ? 'ఆర్డర్లు & లావాదేవీలు'
+                  : 'Orders & Transactions',
+            ),
+            _buildProfileOption(
+              icon: Icons.shopping_bag_outlined,
+              title: isTeluguSelected ? 'నా ఆర్డర్లు' : 'My Orders',
+              onTap: () {
+                Navigator.pushNamed(context, '/my_orders');
+              },
+            ),
+            _buildProfileOption(
+              icon: Icons.history,
+              title:
+                  isTeluguSelected ? 'లావాదేవీ చరిత్ర' : 'Transaction History',
+              onTap: () {
+                // Navigate to transaction history
+              },
+            ),
+
+            const SizedBox(height: 16),
+            _buildSectionHeader(
+              isTeluguSelected ? 'సహాయం & మద్దతు' : 'Help & Support',
+            ),
+            _buildProfileOption(
+              icon: Icons.help_outline,
+              title: isTeluguSelected ? 'సహాయ కేంద్రం' : 'Help Center',
+              onTap: () {
+                // Navigate to help center
+              },
+            ),
+            _buildProfileOption(
+              icon: Icons.info_outline,
+              title: isTeluguSelected ? 'మా గురించి' : 'About Us',
+              onTap: () {
+                // Navigate to about us
+              },
+            ),
+
+            const SizedBox(height: 16),
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
               child: ElevatedButton(
-                onPressed: () {
-                  // Logout functionality
-                  Navigator.pushReplacementNamed(context, '/login');
+                onPressed: () async {
+                  await _auth.signOut();
+                  Navigator.pushReplacementNamed(context, '/welcome');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade700,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  minimumSize: const Size.fromHeight(50),
                 ),
                 child: Text(
-                  isTeluguSelected ? 'లాగ్ అవుట్' : 'Logout',
+                  isTeluguSelected ? 'లాగ్అవుట్' : 'Logout',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -244,95 +203,168 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 24),
           ],
         ),
       ),
       bottomNavigationBar: FarmerBottomNavigationBar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
+        selectedIndex: selectedIndex,
+        onItemTapped: onItemTapped,
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: Colors.green.shade700, size: 20),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-              const SizedBox(height: 4),
-              Text(value, style: const TextStyle(fontSize: 16)),
-            ],
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          title,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.green.shade800,
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildSaleItem(
-    String crop,
-    String quantity,
-    String amount,
-    String date,
+  Widget _buildProfileOption({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    String? subtitle,
+  }) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      elevation: 0.5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListTile(
+        leading: Icon(icon, color: Colors.green.shade800),
+        title: Text(
+          title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+        subtitle: subtitle != null ? Text(subtitle) : null,
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: onTap,
+      ),
+    );
+  }
+
+  Widget _buildLanguageOption(
+    BuildContext context,
+    LanguageProvider languageProvider,
+    bool isTeluguSelected,
   ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.green.shade100,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(Icons.eco, color: Colors.green.shade800, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  crop,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  quantity,
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      elevation: 0.5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListTile(
+        leading: Icon(Icons.language, color: Colors.green.shade800),
+        title: Text(
+          isTeluguSelected ? 'భాష' : 'Language',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+        subtitle: Text(isTeluguSelected ? 'తెలుగు' : 'English'),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: () {
+          _showLanguageBottomSheet(context, languageProvider, isTeluguSelected);
+        },
+      ),
+    );
+  }
+
+  void _showLanguageBottomSheet(
+    BuildContext context,
+    LanguageProvider languageProvider,
+    bool isTeluguSelected,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                amount,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green.shade800,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    Text(
+                      isTeluguSelected ? 'భాషను ఎంచుకోండి' : 'Select Language',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
                 ),
               ),
-              Text(
-                date,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              const Divider(),
+              _buildLanguageItem(
+                context: context,
+                title: 'English',
+                isSelected: !isTeluguSelected,
+                onTap: () {
+                  languageProvider.setLanguage('en');
+                  Navigator.pop(context);
+                },
+              ),
+              _buildLanguageItem(
+                context: context,
+                title: 'తెలుగు (Telugu)',
+                isSelected: isTeluguSelected,
+                onTap: () {
+                  languageProvider.setLanguage('te');
+                  Navigator.pop(context);
+                },
               ),
             ],
           ),
-        ],
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguageItem({
+    required BuildContext context,
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        child: Row(
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+            const Spacer(),
+            if (isSelected)
+              Icon(Icons.check_circle, color: Colors.green.shade800),
+          ],
+        ),
       ),
     );
   }
