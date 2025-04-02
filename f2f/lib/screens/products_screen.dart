@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:f2f/utils/string_extensions.dart';
+// Remove string_extensions import
+// import 'package:f2f/utils/string_extensions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+// Add language provider import
+import 'package:provider/provider.dart';
+import 'package:f2f/providers/language_provider.dart';
 
 class Product {
   final String name;
@@ -25,6 +29,7 @@ class Product {
 class ProductsScreen extends StatefulWidget {
   final String category;
 
+  // Remove the unused positional parameter
   const ProductsScreen({super.key, required this.category});
 
   @override
@@ -40,15 +45,35 @@ class _ProductsScreenState extends State<ProductsScreen> {
   bool isVegetableSection = true;
   final TextEditingController searchController = TextEditingController();
   List<Product> filteredProducts = [];
-  
+
   final List<Product> fruits = [
-    Product(name: 'Apple', imageUrl: 'assets/images/apple.png', price: 120, unit: 'kg'),
-    Product(name: 'Banana', imageUrl: 'assets/images/banana.png', price: 40, unit: 'dozen'),
+    Product(
+      name: 'Apple',
+      imageUrl: 'assets/images/apple.png',
+      price: 120,
+      unit: 'kg',
+    ),
+    Product(
+      name: 'Banana',
+      imageUrl: 'assets/images/banana.png',
+      price: 40,
+      unit: 'dozen',
+    ),
   ];
 
   final List<Product> vegetables = [
-    Product(name: 'Tomato', imageUrl: 'assets/images/tomato.png', price: 30, unit: 'kg'),
-    Product(name: 'onion', imageUrl: 'assets/images/onion.png', price: 25, unit: 'kg'),
+    Product(
+      name: 'Tomato',
+      imageUrl: 'assets/images/tomato.png',
+      price: 30,
+      unit: 'kg',
+    ),
+    Product(
+      name: 'onion',
+      imageUrl: 'assets/images/onion.png',
+      price: 25,
+      unit: 'kg',
+    ),
   ];
 
   List<Product> get products => isVegetableSection ? vegetables : fruits;
@@ -57,6 +82,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   void initState() {
     super.initState();
     _getFarmerData();
+    // Fix the category check
     isVegetableSection = widget.category == 'Vegetables';
     filteredProducts = List.from(products);
   }
@@ -66,24 +92,22 @@ class _ProductsScreenState extends State<ProductsScreen> {
       final user = _auth.currentUser;
       if (user != null) {
         _farmerId = user.uid;
-        
+
         // First try to get from 'farmDetails'
-        DocumentSnapshot doc = await _firestore.collection('users').doc(_farmerId).get();
-        
+        DocumentSnapshot doc =
+            await _firestore.collection('users').doc(_farmerId).get();
+
         if (doc.exists) {
           var data = doc.data() as Map<String, dynamic>?;
-          
+
           // Check multiple possible locations for the name
           if (data?['farmDetails']?['name'] != null) {
             _farmerName = data!['farmDetails']['name'];
-          } 
-          else if (data?['name'] != null) {
+          } else if (data?['name'] != null) {
             _farmerName = data!['name'];
-          }
-          else if (data?['displayName'] != null) {
+          } else if (data?['displayName'] != null) {
             _farmerName = data!['displayName'];
-          }
-          else {
+          } else {
             _farmerName = 'No Name Found';
           }
         }
@@ -101,10 +125,18 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Add language provider
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
+
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(widget.category.tr(context)),
+          title: Text(
+            isTeluguSelected
+                ? (widget.category == 'Vegetables' ? 'కూరగాయలు' : 'పండ్లు')
+                : widget.category,
+          ),
           backgroundColor: Colors.green.shade800,
         ),
         body: const Center(child: CircularProgressIndicator()),
@@ -113,7 +145,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.category.tr(context)),
+        title: Text(
+          isTeluguSelected
+              ? (widget.category == 'Vegetables' ? 'కూరగాయలు' : 'పండ్లు')
+              : widget.category,
+        ),
         backgroundColor: Colors.green.shade800,
         elevation: 0,
         actions: [
@@ -131,8 +167,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ),
             label: Text(
               isVegetableSection
-                  ? 'Show Fruits'.tr(context)
-                  : 'Show Vegetables'.tr(context),
+                  ? (isTeluguSelected ? 'పండ్లు చూపించు' : 'Show Fruits')
+                  : (isTeluguSelected ? 'కూరగాయలు చూపించు' : 'Show Vegetables'),
               style: const TextStyle(color: Colors.white),
             ),
           ),
@@ -150,6 +186,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   Widget _buildSearchBar() {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
+
     return Container(
       margin: const EdgeInsets.all(8.0),
       decoration: BoxDecoration(
@@ -166,7 +205,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
       child: TextField(
         controller: searchController,
         decoration: InputDecoration(
-          hintText: 'Search products...'.tr(context),
+          hintText:
+              isTeluguSelected
+                  ? 'ఉత్పత్తులను శోధించండి...'
+                  : 'Search products...',
           prefixIcon: Icon(Icons.search, color: Colors.green.shade800),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
@@ -183,9 +225,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
         ),
         onChanged: (value) {
           setState(() {
-            filteredProducts = products
-                .where((product) => product.name.toLowerCase().contains(value.toLowerCase()))
-                .toList();
+            filteredProducts =
+                products
+                    .where(
+                      (product) => product.name.toLowerCase().contains(
+                        value.toLowerCase(),
+                      ),
+                    )
+                    .toList();
           });
         },
       ),
@@ -203,25 +250,42 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   Widget _buildProductCard(Product product) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
+
     return Container(
       height: 120,
       margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
         color: Colors.white.withOpacity(0.7),
-        boxShadow: [BoxShadow(color: Colors.green.withOpacity(0.1), blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(color: Colors.green.withOpacity(0.1), blurRadius: 10),
+        ],
         border: Border.all(color: Colors.green.shade100, width: 1),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(12),
         leading: _buildProductImage(product.imageUrl),
-        title: Text(product.name.tr(context), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        subtitle: product.selectedQuantity != null
-            ? Text('${product.selectedQuantity} ${product.unit} at ₹${product.selectedPrice}/${product.unit}'.tr(context),
-                style: TextStyle(color: Colors.green.shade700, fontSize: 14))
-            : null,
+        title: Text(
+          _getTranslatedProductName(product.name, isTeluguSelected),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        subtitle:
+            product.selectedQuantity != null
+                ? Text(
+                  isTeluguSelected
+                      ? '${product.selectedQuantity} ${_getTranslatedUnit(product.unit, isTeluguSelected)} వద్ద ₹${product.selectedPrice}/${_getTranslatedUnit(product.unit, isTeluguSelected)}'
+                      : '${product.selectedQuantity} ${product.unit} at ₹${product.selectedPrice}/${product.unit}',
+                  style: TextStyle(color: Colors.green.shade700, fontSize: 14),
+                )
+                : null,
         trailing: IconButton(
-          icon: Icon(Icons.add_circle_outline, color: Colors.green.shade800, size: 30),
+          icon: Icon(
+            Icons.add_circle_outline,
+            color: Colors.green.shade800,
+            size: 30,
+          ),
           onPressed: () => _showAddBottomSheet(context, product),
         ),
       ),
@@ -236,62 +300,105 @@ class _ProductsScreenState extends State<ProductsScreen> {
         height: 80,
         width: 80,
         fit: BoxFit.fitHeight,
-        errorBuilder: (context, error, stackTrace) => Container(
-          height: 80,
-          width: 80,
-          decoration: BoxDecoration(
-            color: Colors.green.shade100,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(Icons.image_not_supported, size: 40, color: Colors.green.shade800),
-        ),
+        errorBuilder:
+            (context, error, stackTrace) => Container(
+              height: 80,
+              width: 80,
+              decoration: BoxDecoration(
+                color: Colors.green.shade100,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.image_not_supported,
+                size: 40,
+                color: Colors.green.shade800,
+              ),
+            ),
       ),
     );
   }
 
   Widget _buildSellButton() {
+    // Get language provider
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.green.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
       child: ElevatedButton.icon(
         onPressed: _isLoading ? null : () => _processSale(context),
-        icon: _isLoading
-            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white))
-            : const Icon(Icons.sell, size: 24),
+        icon:
+            _isLoading
+                ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(color: Colors.white),
+                )
+                : const Icon(Icons.sell, size: 24),
         label: Text(
-          _isLoading ? 'Processing...' : 'SELL SELECTED ITEMS'.tr(context),
+          _isLoading
+              ? (isTeluguSelected ? 'ప్రాసెసింగ్...' : 'Processing...')
+              : (isTeluguSelected
+                  ? 'ఎంచుకున్న వస్తువులను అమ్మండి'
+                  : 'SELL SELECTED ITEMS'),
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.green.shade800,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       ),
     );
   }
 
   Future<void> _processSale(BuildContext context) async {
-    final soldItems = products
-        .where((product) => product.selectedQuantity != null && product.selectedPrice != null)
-        .map((product) => {
-              'name': product.name,
-              'quantity': product.selectedQuantity,
-              'unit': product.unit,
-              'price': product.selectedPrice,
-              'total': product.selectedQuantity! * product.selectedPrice!,
-            })
-        .toList();
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
+    final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
+
+    final soldItems =
+        products
+            .where(
+              (product) =>
+                  product.selectedQuantity != null &&
+                  product.selectedPrice != null,
+            )
+            .map(
+              (product) => {
+                'name': product.name,
+                'quantity': product.selectedQuantity,
+                'unit': product.unit,
+                'price': product.selectedPrice,
+                'total': product.selectedQuantity! * product.selectedPrice!,
+              },
+            )
+            .toList();
 
     if (soldItems.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Please add quantity and price for at least one product'.tr(context)),
+            content: Text(
+              isTeluguSelected
+                  ? 'దయచేసి కనీసం ఒక ఉత్పత్తికి పరిమాణం మరియు ధరను జోడించండి'
+                  : 'Please add quantity and price for at least one product',
+            ),
             backgroundColor: Colors.red.shade800,
             duration: const Duration(seconds: 2),
           ),
@@ -302,7 +409,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final totalAmount = soldItems.fold(0.0, (sum, item) => sum + (item['total'] as double));
+      final totalAmount = soldItems.fold(
+        0.0,
+        (sum, item) => sum + (item['total'] as double),
+      );
 
       // Create sale document with farmer details
       await _firestore.collection('sales').add({
@@ -318,7 +428,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Sale recorded successfully! Total: ₹$totalAmount'.tr(context)),
+            content: Text(
+              isTeluguSelected
+                  ? 'అమ్మకం విజయవంతంగా నమోదు చేయబడింది! మొత్తం: ₹$totalAmount'
+                  : 'Sale recorded successfully! Total: ₹$totalAmount',
+            ),
             backgroundColor: Colors.green.shade800,
           ),
         );
@@ -334,10 +448,15 @@ class _ProductsScreenState extends State<ProductsScreen> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
+      // In _processSale method
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving sale: $e'.tr(context)),
+            content: Text(
+              isTeluguSelected
+                  ? 'సేల్ సేవ్ చేయడంలో లోపం: $e'
+                  : 'Error saving sale: $e',
+            ),
             backgroundColor: Colors.red.shade800,
           ),
         );
@@ -346,6 +465,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   void _showAddBottomSheet(BuildContext context, Product product) {
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
+    final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
+
     double quantity = 1.0;
     double price = product.price;
     String selectedUnit = product.unit;
@@ -367,36 +492,48 @@ class _ProductsScreenState extends State<ProductsScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(product.name.tr(context), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text(
+                    _getTranslatedProductName(product.name, isTeluguSelected),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   _buildUnitDropdown(setModalState, selectedUnit),
                   const SizedBox(height: 10),
-                  _buildQuantityField(setModalState, selectedUnit, quantityError, (value) {
-                    final parsedValue = double.tryParse(value);
-                    if (parsedValue != null) {
-                      if (selectedUnit == 'kg' && parsedValue > 5) {
-                        setModalState(() {
-                          quantityError = 'Maximum quantity is 5 kg';
-                          quantity = 5.0;
-                        });
-                      } else if (selectedUnit == 'g' && parsedValue > 5000) {
-                        setModalState(() {
-                          quantityError = 'Maximum quantity is 5000 g';
-                          quantity = 5000.0;
-                        });
-                      } else if (selectedUnit == 'dozen' && parsedValue > 10) {
-                        setModalState(() {
-                          quantityError = 'Maximum quantity is 10 dozen';
-                          quantity = 10.0;
-                        });
-                      } else {
-                        setModalState(() {
-                          quantityError = null;
-                          quantity = parsedValue;
-                        });
+                  _buildQuantityField(
+                    setModalState,
+                    selectedUnit,
+                    quantityError,
+                    (value) {
+                      final parsedValue = double.tryParse(value);
+                      if (parsedValue != null) {
+                        if (selectedUnit == 'kg' && parsedValue > 5) {
+                          setModalState(() {
+                            quantityError = 'Maximum quantity is 5 kg';
+                            quantity = 5.0;
+                          });
+                        } else if (selectedUnit == 'g' && parsedValue > 5000) {
+                          setModalState(() {
+                            quantityError = 'Maximum quantity is 5000 g';
+                            quantity = 5000.0;
+                          });
+                        } else if (selectedUnit == 'dozen' &&
+                            parsedValue > 10) {
+                          setModalState(() {
+                            quantityError = 'Maximum quantity is 10 dozen';
+                            quantity = 10.0;
+                          });
+                        } else {
+                          setModalState(() {
+                            quantityError = null;
+                            quantity = parsedValue;
+                          });
+                        }
                       }
-                    }
-                  }),
+                    },
+                  ),
                   const SizedBox(height: 10),
                   _buildPriceField(price, (value) {
                     setModalState(() => price = double.tryParse(value) ?? 0.0);
@@ -414,9 +551,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green.shade800,
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 12,
+                      ),
                     ),
-                    child: Text('OK'.tr(context)),
+                    child: Text(isTeluguSelected ? 'సరే' : 'OK'),
                   ),
                 ],
               ),
@@ -428,21 +568,36 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   Widget _buildUnitDropdown(StateSetter setModalState, String selectedUnit) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
+
     return DropdownButtonFormField<String>(
       value: selectedUnit,
       decoration: InputDecoration(
-        labelText: 'Select Unit'.tr(context),
+        labelText: isTeluguSelected ? 'యూనిట్ ఎంచుకోండి' : 'Select Unit',
         border: const OutlineInputBorder(),
       ),
       items: [
-        DropdownMenuItem(value: 'kg', child: Text('Kilograms (kg)'.tr(context))),
-        DropdownMenuItem(value: 'g', child: Text('Grams (g)'.tr(context))),
-        DropdownMenuItem(value: 'dozen', child: Text('Dozen (12 pieces)'.tr(context))),
+        DropdownMenuItem(
+          value: 'kg',
+          child: Text(
+            isTeluguSelected ? 'కిలోగ్రాములు (కిలో)' : 'Kilograms (kg)',
+          ),
+        ),
+        DropdownMenuItem(
+          value: 'g',
+          child: Text(isTeluguSelected ? 'గ్రాములు (గ్రా)' : 'Grams (g)'),
+        ),
+        DropdownMenuItem(
+          value: 'dozen',
+          child: Text(
+            isTeluguSelected ? 'డజను (12 ముక్కలు)' : 'Dozen (12 pieces)',
+          ),
+        ),
       ],
       onChanged: (String? newValue) {
         setModalState(() {
           selectedUnit = newValue!;
-// No need to reset quantityError here since it's handled in the quantity field
         });
       },
     );
@@ -454,32 +609,100 @@ class _ProductsScreenState extends State<ProductsScreen> {
     String? quantityError,
     Function(String) onChanged,
   ) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
+
     return TextField(
       keyboardType: TextInputType.number,
       decoration: InputDecoration(
-        labelText: 'Quantity ($selectedUnit)'.tr(context),
+        labelText:
+            isTeluguSelected
+                ? 'పరిమాణం ($selectedUnit)'
+                : 'Quantity ($selectedUnit)',
         border: const OutlineInputBorder(),
-        errorText: quantityError?.tr(context),
-        helperText: selectedUnit == 'kg'
-            ? 'Maximum: 5 kg'.tr(context)
-            : selectedUnit == 'g'
-                ? 'Maximum: 5000 g'.tr(context)
-                : 'Maximum: 10 dozen'.tr(context),
+        errorText:
+            quantityError != null
+                ? (isTeluguSelected
+                    ? _getTranslatedError(quantityError, selectedUnit)
+                    : quantityError)
+                : null,
+        helperText:
+            selectedUnit == 'kg'
+                ? (isTeluguSelected ? 'గరిష్టం: 5 కిలో' : 'Maximum: 5 kg')
+                : selectedUnit == 'g'
+                ? (isTeluguSelected ? 'గరిష్టం: 5000 గ్రా' : 'Maximum: 5000 g')
+                : (isTeluguSelected ? 'గరిష్టం: 10 డజను' : 'Maximum: 10 dozen'),
       ),
       onChanged: onChanged,
     );
   }
 
-  Widget _buildPriceField(double price, Function(String) onChanged, String unit) {
+  Widget _buildPriceField(
+    double price,
+    Function(String) onChanged,
+    String unit,
+  ) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
+
     return TextField(
       keyboardType: TextInputType.number,
       controller: TextEditingController(text: price.toString()),
       decoration: InputDecoration(
-        labelText: 'Price per $unit'.tr(context),
+        labelText:
+            isTeluguSelected
+                ? 'ప్రతి ${_getTranslatedUnit(unit, isTeluguSelected)} ధర'
+                : 'Price per $unit',
         border: const OutlineInputBorder(),
       ),
       onChanged: onChanged,
     );
+  }
+
+  // Helper methods for translations
+  String _getTranslatedProductName(String name, bool isTeluguSelected) {
+    if (!isTeluguSelected) return name;
+
+    switch (name.toLowerCase()) {
+      case 'apple':
+        return 'యాపిల్';
+      case 'banana':
+        return 'అరటిపండు';
+      case 'tomato':
+        return 'టమాటా';
+      case 'onion':
+        return 'ఉల్లిపాయ';
+      default:
+        return name;
+    }
+  }
+
+  String _getTranslatedUnit(String unit, bool isTeluguSelected) {
+    if (!isTeluguSelected) return unit;
+
+    switch (unit) {
+      case 'kg':
+        return 'కిలో';
+      case 'g':
+        return 'గ్రా';
+      case 'dozen':
+        return 'డజను';
+      default:
+        return unit;
+    }
+  }
+
+  String _getTranslatedError(String error, String unit) {
+    if (error.contains('Maximum quantity')) {
+      if (unit == 'kg') {
+        return 'గరిష్ట పరిమాణం 5 కిలో';
+      } else if (unit == 'g') {
+        return 'గరిష్ట పరిమాణం 5000 గ్రా';
+      } else if (unit == 'dozen') {
+        return 'గరిష్ట పరిమాణం 10 డజను';
+      }
+    }
+    return error;
   }
 
   @override

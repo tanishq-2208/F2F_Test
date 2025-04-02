@@ -1,6 +1,7 @@
+import 'package:f2f/widgets/farmer_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:f2f/services/language_service.dart';
+import 'package:f2f/providers/language_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -16,14 +17,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final user = _auth.currentUser;
-    final languageService = Provider.of<LanguageService>(context);
-    final currentLanguage = languageService.currentLocale.languageCode;
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
+    int selectedIndex = 3;
+
+    void onItemTapped(int index) {
+      if (index != selectedIndex) {
+        setState(() {
+          selectedIndex = index;
+        });
+
+        // Handle navigation based on the selected index
+        switch (index) {
+          case 0:
+            Navigator.pushReplacementNamed(context, '/home');
+            break;
+          case 1:
+            Navigator.pushReplacementNamed(context, '/plant_analysis');
+            break;
+          case 2:
+            Navigator.pushReplacementNamed(context, '/upload_items');
+            break;
+          case 3:
+            // Already on profile page
+            break;
+        }
+      }
+    }
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: Text(
-          currentLanguage == 'en' ? 'Profile' : 'ప్రొఫైల్',
+          isTeluguSelected ? 'ప్రొఫైల్' : 'Profile',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.green.shade800,
@@ -39,15 +65,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Center(
                 child: Column(
                   children: [
-                    CircleAvatar(
+                    const CircleAvatar(
                       radius: 50,
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.person,
-                        size: 60,
-                        color: Colors.green.shade800,
-                      ),
+                      backgroundImage: AssetImage('assets/images/farmer.png'),
                     ),
+
                     const SizedBox(height: 12),
                     Text(
                       user?.displayName ?? 'Farmer User',
@@ -70,34 +92,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // Profile options
             const SizedBox(height: 16),
             _buildSectionHeader(
-              currentLanguage == 'en'
-                  ? 'Account Settings'
-                  : 'ఖాతా సెట్టింగ్‌లు',
+              isTeluguSelected ? 'ఖాతా సెట్టింగ్‌లు' : 'Account Settings',
             ),
             _buildProfileOption(
               icon: Icons.person_outline,
-              title: currentLanguage == 'en' ? 'Edit Profile' : 'ప్రొఫైల్‌ని సవరించండి',
+              title:
+                  isTeluguSelected ? 'ప్రొఫైల్‌ని సవరించండి' : 'Edit Profile',
               onTap: () {},
             ),
             _buildProfileOption(
               icon: Icons.circle,
-              title: currentLanguage == 'en' ? 'Status' : 'స్థితి',
-              subtitle: currentLanguage == 'en' ? 'Available' : 'అందుబాటులో ఉంది',
+              title: isTeluguSelected ? 'స్థితి' : 'Status',
+              subtitle: isTeluguSelected ? 'అందుబాటులో ఉంది' : 'Available',
               onTap: () {
                 Navigator.pushNamed(context, '/status');
               },
             ),
             _buildProfileOption(
               icon: Icons.location_on_outlined,
-              title: currentLanguage == 'en' ? 'Saved Addresses' : 'సేవ్ చేసిన చిరునామాలు',
+              title:
+                  isTeluguSelected
+                      ? 'సేవ్ చేసిన చిరునామాలు'
+                      : 'Saved Addresses',
               onTap: () {},
             ),
             _buildProfileOption(
               icon: Icons.payment_outlined,
               title:
-                  currentLanguage == 'en'
-                      ? 'Payment Methods'
-                      : 'చెల్లింపు పద్ధతులు',
+                  isTeluguSelected ? 'చెల్లింపు పద్ధతులు' : 'Payment Methods',
               onTap: () {
                 // Navigate to payment methods
               },
@@ -105,13 +127,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 16),
             _buildSectionHeader(
-              currentLanguage == 'en' ? 'Preferences' : 'ప్రాధాన్యతలు',
+              isTeluguSelected ? 'ప్రాధాన్యతలు' : 'Preferences',
             ),
-            _buildLanguageOption(context, languageService, currentLanguage),
+            _buildLanguageOption(context, languageProvider, isTeluguSelected),
             _buildProfileOption(
               icon: Icons.notifications_outlined,
-              title:
-                  currentLanguage == 'en' ? 'Notifications' : 'నోటిఫికేషన్లు',
+              title: isTeluguSelected ? 'నోటిఫికేషన్లు' : 'Notifications',
               onTap: () {
                 // Navigate to notifications
               },
@@ -119,13 +140,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 16),
             _buildSectionHeader(
-              currentLanguage == 'en'
-                  ? 'Orders & Transactions'
-                  : 'ఆర్డర్లు & లావాదేవీలు',
+              isTeluguSelected
+                  ? 'ఆర్డర్లు & లావాదేవీలు'
+                  : 'Orders & Transactions',
             ),
             _buildProfileOption(
               icon: Icons.shopping_bag_outlined,
-              title: currentLanguage == 'en' ? 'My Orders' : 'నా ఆర్డర్లు',
+              title: isTeluguSelected ? 'నా ఆర్డర్లు' : 'My Orders',
               onTap: () {
                 Navigator.pushNamed(context, '/my_orders');
               },
@@ -133,9 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildProfileOption(
               icon: Icons.history,
               title:
-                  currentLanguage == 'en'
-                      ? 'Transaction History'
-                      : 'లావాదేవీ చరిత్ర',
+                  isTeluguSelected ? 'లావాదేవీ చరిత్ర' : 'Transaction History',
               onTap: () {
                 // Navigate to transaction history
               },
@@ -143,18 +162,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 16),
             _buildSectionHeader(
-              currentLanguage == 'en' ? 'Help & Support' : 'సహాయం & మద్దతు',
+              isTeluguSelected ? 'సహాయం & మద్దతు' : 'Help & Support',
             ),
             _buildProfileOption(
               icon: Icons.help_outline,
-              title: currentLanguage == 'en' ? 'Help Center' : 'సహాయ కేంద్రం',
+              title: isTeluguSelected ? 'సహాయ కేంద్రం' : 'Help Center',
               onTap: () {
                 // Navigate to help center
               },
             ),
             _buildProfileOption(
               icon: Icons.info_outline,
-              title: currentLanguage == 'en' ? 'About Us' : 'మా గురించి',
+              title: isTeluguSelected ? 'మా గురించి' : 'About Us',
               onTap: () {
                 // Navigate to about us
               },
@@ -176,7 +195,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   minimumSize: const Size.fromHeight(50),
                 ),
                 child: Text(
-                  currentLanguage == 'en' ? 'Logout' : 'లాగ్అవుట్',
+                  isTeluguSelected ? 'లాగ్అవుట్' : 'Logout',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -187,6 +206,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 24),
           ],
         ),
+      ),
+      bottomNavigationBar: FarmerBottomNavigationBar(
+        selectedIndex: selectedIndex,
+        onItemTapped: onItemTapped,
       ),
     );
   }
@@ -233,8 +256,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildLanguageOption(
     BuildContext context,
-    LanguageService languageService,
-    String currentLanguage,
+    LanguageProvider languageProvider,
+    bool isTeluguSelected,
   ) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
@@ -243,13 +266,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: ListTile(
         leading: Icon(Icons.language, color: Colors.green.shade800),
         title: Text(
-          currentLanguage == 'en' ? 'Language' : 'భాష',
+          isTeluguSelected ? 'భాష' : 'Language',
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
-        subtitle: Text(currentLanguage == 'en' ? 'English' : 'తెలుగు'),
+        subtitle: Text(isTeluguSelected ? 'తెలుగు' : 'English'),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: () {
-          _showLanguageBottomSheet(context, languageService, currentLanguage);
+          _showLanguageBottomSheet(context, languageProvider, isTeluguSelected);
         },
       ),
     );
@@ -257,8 +280,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showLanguageBottomSheet(
     BuildContext context,
-    LanguageService languageService,
-    String currentLanguage,
+    LanguageProvider languageProvider,
+    bool isTeluguSelected,
   ) {
     showModalBottomSheet(
       context: context,
@@ -276,9 +299,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Row(
                   children: [
                     Text(
-                      currentLanguage == 'en'
-                          ? 'Select Language'
-                          : 'భాషను ఎంచుకోండి',
+                      isTeluguSelected ? 'భాషను ఎంచుకోండి' : 'Select Language',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -298,18 +319,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildLanguageItem(
                 context: context,
                 title: 'English',
-                isSelected: currentLanguage == 'en',
+                isSelected: !isTeluguSelected,
                 onTap: () {
-                  languageService.changeLanguage('en');
+                  languageProvider.setLanguage('en');
                   Navigator.pop(context);
                 },
               ),
               _buildLanguageItem(
                 context: context,
                 title: 'తెలుగు (Telugu)',
-                isSelected: currentLanguage == 'te',
+                isSelected: isTeluguSelected,
                 onTap: () {
-                  languageService.changeLanguage('te');
+                  languageProvider.setLanguage('te');
                   Navigator.pop(context);
                 },
               ),
