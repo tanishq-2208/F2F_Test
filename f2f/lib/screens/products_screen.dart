@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:f2f/utils/string_extensions.dart'; // Add this import
+import 'package:provider/provider.dart';
+import 'package:f2f/providers/language_provider.dart';
 
 class Product {
   final String name;
@@ -30,7 +31,6 @@ class ProductsScreen extends StatefulWidget {
 
 class _ProductsScreenState extends State<ProductsScreen> {
   bool isVegetableSection = false;
-  String? selectedPaymentMethod;
 
   final List<Product> fruits = [
     Product(
@@ -77,9 +77,17 @@ class _ProductsScreenState extends State<ProductsScreen> {
   // Update AppBar in build method
   @override
   Widget build(BuildContext context) {
+    // Get language provider
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.category.tr(context)),
+        title: Text(
+          isTeluguSelected
+              ? (widget.category == 'Vegetables' ? 'కూరగాయలు' : 'పండ్లు')
+              : widget.category,
+        ),
         backgroundColor: Colors.green.shade800,
         elevation: 0,
         actions: [
@@ -97,8 +105,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ),
             label: Text(
               isVegetableSection
-                  ? 'Show Fruits'.tr(context)
-                  : 'Show Vegetables'.tr(context),
+                  ? (isTeluguSelected ? 'పండ్లు చూపించు' : 'Show Fruits')
+                  : (isTeluguSelected ? 'కూరగాయలు చూపించు' : 'Show Vegetables'),
               style: const TextStyle(color: Colors.white),
             ),
           ),
@@ -121,11 +129,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 ),
               ],
             ),
-            // Update the search TextField in the build method:
             child: TextField(
               controller: searchController,
               decoration: InputDecoration(
-                hintText: 'Search products...'.tr(context),
+                hintText:
+                    isTeluguSelected
+                        ? 'ఉత్పత్తులను శోధించండి...'
+                        : 'Search products...',
                 prefixIcon: Icon(Icons.search, color: Colors.green.shade800),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
@@ -205,7 +215,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       ),
                     ),
                     title: Text(
-                      product.name.tr(context),
+                      _getTranslatedProductName(product.name, isTeluguSelected),
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -214,8 +224,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     subtitle:
                         product.selectedQuantity != null
                             ? Text(
-                              '${product.selectedQuantity} ${product.unit} at ₹${product.selectedPrice}/${product.unit}'
-                                  .tr(context),
+                              isTeluguSelected
+                                  ? '${product.selectedQuantity} ${_getTranslatedUnit(product.unit, isTeluguSelected)} వద్ద ₹${product.selectedPrice}/${_getTranslatedUnit(product.unit, isTeluguSelected)}'
+                                  : '${product.selectedQuantity} ${product.unit} at ₹${product.selectedPrice}/${product.unit}',
                               style: TextStyle(
                                 color: Colors.green.shade700,
                                 fontSize: 14,
@@ -251,11 +262,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ),
             child: ElevatedButton.icon(
               onPressed: () {
-                _showPaymentMethodBottomSheet(context);
+                _processSale(context);
               },
               icon: const Icon(Icons.sell, size: 24),
               label: Text(
-                'SELL SELECTED ITEMS'.tr(context),
+                isTeluguSelected
+                    ? 'ఎంచుకున్న వస్తువులను అమ్మండి'
+                    : 'SELL SELECTED ITEMS',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -275,75 +288,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
     );
   }
 
-  void _showPaymentMethodBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-      ),
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setModalState) {
-            return Container(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Select Payment Method'.tr(context),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  ListTile(
-                    leading: Icon(Icons.money, color: Colors.green.shade800),
-                    title: Text('Cash'.tr(context)),
-                    onTap: () {
-                      setModalState(() {
-                        selectedPaymentMethod = 'Cash';
-                      });
-                      _processSale(context);
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.credit_card,
-                      color: Colors.green.shade800,
-                    ),
-                    title: Text('Credit/Debit Card'.tr(context)),
-                    onTap: () {
-                      setModalState(() {
-                        selectedPaymentMethod = 'Credit/Debit Card';
-                      });
-                      _processSale(context);
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.phone_android,
-                      color: Colors.green.shade800,
-                    ),
-                    title: Text('UPI'.tr(context)),
-                    onTap: () {
-                      setModalState(() {
-                        selectedPaymentMethod = 'UPI';
-                      });
-                      _processSale(context);
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   void _processSale(BuildContext context) {
-    Navigator.pop(context); // Close the payment method bottom sheet
+    // Get language provider
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
+    final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
 
     double totalAmount = 0;
     bool hasSelectedProducts = false;
@@ -359,8 +310,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Total Sale Amount: ₹$totalAmount - Payment Method: $selectedPaymentMethod'
-                .tr(context),
+            isTeluguSelected
+                ? 'మొత్తం అమ్మకపు మొత్తం: ₹$totalAmount'
+                : 'Total Sale Amount: ₹$totalAmount',
             style: const TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.green.shade800,
@@ -378,9 +330,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Please add quantity and price for at least one product'.tr(
-              context,
-            ),
+            isTeluguSelected
+                ? 'దయచేసి కనీసం ఒక ఉత్పత్తికి పరిమాణం మరియు ధరను జోడించండి'
+                : 'Please add quantity and price for at least one product',
             style: const TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.red.shade800,
@@ -391,6 +343,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   void _showAddBottomSheet(BuildContext context, Product product) {
+    // Get language provider
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
+    final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
+
     double quantity = 1.0;
     double price = 0.0;
     String selectedUnit = product.unit;
@@ -406,17 +365,26 @@ class _ProductsScreenState extends State<ProductsScreen> {
               if (parsedValue != null) {
                 if (selectedUnit == 'kg' && parsedValue > 5) {
                   setModalState(() {
-                    quantityError = 'Maximum quantity is 5 kg';
+                    quantityError =
+                        isTeluguSelected
+                            ? 'గరిష్ట పరిమాణం 5 కిలోలు'
+                            : 'Maximum quantity is 5 kg';
                     quantity = 5.0;
                   });
                 } else if (selectedUnit == 'g' && parsedValue > 5000) {
                   setModalState(() {
-                    quantityError = 'Maximum quantity is 5000 g';
+                    quantityError =
+                        isTeluguSelected
+                            ? 'గరిష్ట పరిమాణం 5000 గ్రాములు'
+                            : 'Maximum quantity is 5000 g';
                     quantity = 5000.0;
                   });
                 } else if (selectedUnit == 'dozen' && parsedValue > 10) {
                   setModalState(() {
-                    quantityError = 'Maximum quantity is 10 dozen';
+                    quantityError =
+                        isTeluguSelected
+                            ? 'గరిష్ట పరిమాణం 10 డజన్లు'
+                            : 'Maximum quantity is 10 dozen';
                     quantity = 10.0;
                   });
                 } else {
@@ -434,7 +402,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    product.name.tr(context),
+                    _getTranslatedProductName(product.name, isTeluguSelected),
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -444,21 +412,32 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   DropdownButtonFormField<String>(
                     value: selectedUnit,
                     decoration: InputDecoration(
-                      labelText: 'Select Unit'.tr(context),
+                      labelText:
+                          isTeluguSelected ? 'యూనిట్ ఎంచుకోండి' : 'Select Unit',
                       border: const OutlineInputBorder(),
                     ),
                     items: [
                       DropdownMenuItem(
                         value: 'kg',
-                        child: Text('Kilograms (kg)'.tr(context)),
+                        child: Text(
+                          isTeluguSelected
+                              ? 'కిలోగ్రాములు (కిలో)'
+                              : 'Kilograms (kg)',
+                        ),
                       ),
                       DropdownMenuItem(
                         value: 'g',
-                        child: Text('Grams (g)'.tr(context)),
+                        child: Text(
+                          isTeluguSelected ? 'గ్రాములు (గ్రా)' : 'Grams (g)',
+                        ),
                       ),
                       DropdownMenuItem(
                         value: 'dozen',
-                        child: Text('Dozen (12 pieces)'.tr(context)),
+                        child: Text(
+                          isTeluguSelected
+                              ? 'డజను (12 ముక్కలు)'
+                              : 'Dozen (12 pieces)',
+                        ),
                       ),
                     ],
                     onChanged: (String? newValue) {
@@ -473,15 +452,24 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   TextField(
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: 'Quantity ($selectedUnit)'.tr(context),
+                      labelText:
+                          isTeluguSelected
+                              ? 'పరిమాణం ($selectedUnit)'
+                              : 'Quantity ($selectedUnit)',
                       border: const OutlineInputBorder(),
-                      errorText: quantityError?.tr(context),
+                      errorText: quantityError,
                       helperText:
                           selectedUnit == 'kg'
-                              ? 'Maximum: 5 kg'.tr(context)
+                              ? (isTeluguSelected
+                                  ? 'గరిష్టం: 5 కిలో'
+                                  : 'Maximum: 5 kg')
                               : selectedUnit == 'g'
-                              ? 'Maximum: 5000 g'.tr(context)
-                              : 'Maximum: 10 dozen'.tr(context),
+                              ? (isTeluguSelected
+                                  ? 'గరిష్టం: 5000 గ్రా'
+                                  : 'Maximum: 5000 g')
+                              : (isTeluguSelected
+                                  ? 'గరిష్టం: 10 డజన్లు'
+                                  : 'Maximum: 10 dozen'),
                     ),
                     onChanged: validateQuantity,
                   ),
@@ -489,7 +477,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   TextField(
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: ('Price per ' + selectedUnit).tr(context),
+                      labelText:
+                          isTeluguSelected
+                              ? 'ప్రతి $selectedUnit ధర'
+                              : 'Price per $selectedUnit',
                       border: const OutlineInputBorder(),
                     ),
                     onChanged: (value) {
@@ -516,7 +507,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         vertical: 12,
                       ),
                     ),
-                    child: Text('OK'.tr(context)),
+                    child: Text(isTeluguSelected ? 'సరే' : 'OK'),
                   ),
                 ],
               ),
@@ -525,5 +516,39 @@ class _ProductsScreenState extends State<ProductsScreen> {
         );
       },
     );
+  }
+
+  // Helper method to translate product names
+  String _getTranslatedProductName(String name, bool isTeluguSelected) {
+    if (!isTeluguSelected) return name;
+
+    switch (name) {
+      case 'Apple':
+        return 'యాపిల్';
+      case 'Banana':
+        return 'అరటిపండు';
+      case 'Tomato':
+        return 'టమాటా';
+      case 'Onion':
+        return 'ఉల్లిపాయ';
+      default:
+        return name;
+    }
+  }
+
+  // Helper method to translate units
+  String _getTranslatedUnit(String unit, bool isTeluguSelected) {
+    if (!isTeluguSelected) return unit;
+
+    switch (unit) {
+      case 'kg':
+        return 'కిలో';
+      case 'g':
+        return 'గ్రా';
+      case 'dozen':
+        return 'డజను';
+      default:
+        return unit;
+    }
   }
 }

@@ -1,7 +1,7 @@
+import 'package:f2f/widgets/farmer_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:f2f/services/language_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:f2f/providers/language_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -11,174 +11,232 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  int _selectedIndex = 3;
+
+  void _onItemTapped(int index) {
+    if (index != _selectedIndex) {
+      setState(() {
+        _selectedIndex = index;
+      });
+
+      // Handle navigation based on the selected index
+      switch (index) {
+        case 0:
+          Navigator.pushReplacementNamed(context, '/home');
+          break;
+        case 1:
+          Navigator.pushReplacementNamed(context, '/plant_analysis');
+          break;
+        case 2:
+          Navigator.pushReplacementNamed(context, '/upload_items');
+          break;
+        case 3:
+          // Already on profile page
+          break;
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final user = _auth.currentUser;
-    final languageService = Provider.of<LanguageService>(context);
-    final currentLanguage = languageService.currentLocale.languageCode;
+    // Get language provider
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text(
-          currentLanguage == 'en' ? 'Profile' : 'ప్రొఫైల్',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: Text(isTeluguSelected ? 'ప్రొఫైల్' : 'Profile'),
         backgroundColor: Colors.green.shade800,
         elevation: 0,
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Profile header
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-              color: Colors.green.shade800,
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              decoration: BoxDecoration(
+                color: Colors.green.shade800,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
+                ),
+              ),
               child: Center(
                 child: Column(
                   children: [
-                    CircleAvatar(
+                    const CircleAvatar(
                       radius: 50,
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.person,
-                        size: 60,
-                        color: Colors.green.shade800,
-                      ),
+                      backgroundImage: AssetImage('assets/images/farmer.png'),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     Text(
-                      user?.displayName ?? 'Farmer User',
+                      isTeluguSelected ? 'రాజు రెడ్డి' : 'Usham Reddy',
                       style: const TextStyle(
-                        fontSize: 22,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Text(
-                      user?.email ?? 'farmer@example.com',
-                      style: const TextStyle(fontSize: 16, color: Colors.white),
+                      isTeluguSelected ? 'రైతు' : 'Farmer',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70,
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-
-            // Profile options
-            const SizedBox(height: 16),
-            _buildSectionHeader(
-              currentLanguage == 'en'
-                  ? 'Account Settings'
-                  : 'ఖాతా సెట్టింగ్‌లు',
-            ),
-            _buildProfileOption(
-              icon: Icons.person_outline,
-              title:
-                  currentLanguage == 'en'
-                      ? 'Edit Profile'
-                      : 'ప్రొఫైల్‌ని సవరించండి',
-              onTap: () {
-                // Navigate to edit profile
-              },
-            ),
-            _buildProfileOption(
-              icon: Icons.location_on_outlined,
-              title:
-                  currentLanguage == 'en'
-                      ? 'Saved Addresses'
-                      : 'సేవ్ చేసిన చిరునామాలు',
-              onTap: () {
-                // Navigate to addresses
-              },
-            ),
-            _buildProfileOption(
-              icon: Icons.payment_outlined,
-              title:
-                  currentLanguage == 'en'
-                      ? 'Payment Methods'
-                      : 'చెల్లింపు పద్ధతులు',
-              onTap: () {
-                // Navigate to payment methods
-              },
-            ),
-
-            const SizedBox(height: 16),
-            _buildSectionHeader(
-              currentLanguage == 'en' ? 'Preferences' : 'ప్రాధాన్యతలు',
-            ),
-            _buildLanguageOption(context, languageService, currentLanguage),
-            _buildProfileOption(
-              icon: Icons.notifications_outlined,
-              title:
-                  currentLanguage == 'en' ? 'Notifications' : 'నోటిఫికేషన్లు',
-              onTap: () {
-                // Navigate to notifications
-              },
-            ),
-
-            const SizedBox(height: 16),
-            _buildSectionHeader(
-              currentLanguage == 'en'
-                  ? 'Orders & Transactions'
-                  : 'ఆర్డర్లు & లావాదేవీలు',
-            ),
-            _buildProfileOption(
-              icon: Icons.shopping_bag_outlined,
-              title: currentLanguage == 'en' ? 'My Orders' : 'నా ఆర్డర్లు',
-              onTap: () {
-                Navigator.pushNamed(context, '/my_orders');
-              },
-            ),
-            _buildProfileOption(
-              icon: Icons.history,
-              title:
-                  currentLanguage == 'en'
-                      ? 'Transaction History'
-                      : 'లావాదేవీ చరిత్ర',
-              onTap: () {
-                // Navigate to transaction history
-              },
-            ),
-
-            const SizedBox(height: 16),
-            _buildSectionHeader(
-              currentLanguage == 'en' ? 'Help & Support' : 'సహాయం & మద్దతు',
-            ),
-            _buildProfileOption(
-              icon: Icons.help_outline,
-              title: currentLanguage == 'en' ? 'Help Center' : 'సహాయ కేంద్రం',
-              onTap: () {
-                // Navigate to help center
-              },
-            ),
-            _buildProfileOption(
-              icon: Icons.info_outline,
-              title: currentLanguage == 'en' ? 'About Us' : 'మా గురించి',
-              onTap: () {
-                // Navigate to about us
-              },
-            ),
-
-            const SizedBox(height: 16),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
+              padding: const EdgeInsets.all(16.0),
+              child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isTeluguSelected
+                            ? 'వ్యక్తిగత సమాచారం'
+                            : 'Personal Information',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade800,
+                        ),
+                      ),
+                      const Divider(),
+                      _buildInfoRow(
+                        Icons.phone,
+                        isTeluguSelected ? 'ఫోన్' : 'Phone',
+                        '+91 9876543210',
+                      ),
+                      _buildInfoRow(
+                        Icons.location_on,
+                        isTeluguSelected ? 'చిరునామా' : 'Address',
+                        isTeluguSelected
+                            ? 'గ్రామం: రాజుపాలెం, మండలం: కొత్తపల్లి,\nజిల్లా: గుంటూరు, ఆంధ్రప్రదేశ్'
+                            : 'Village: Rajupalem, Mandal: Kottapalli,\nDistrict: Guntur, Andhra Pradesh',
+                      ),
+                    ],
+                  ),
+                ),
               ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isTeluguSelected ? 'వ్యవసాయ వివరాలు' : 'Farm Details',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade800,
+                        ),
+                      ),
+                      const Divider(),
+                      _buildInfoRow(
+                        Icons.landscape,
+                        isTeluguSelected ? 'భూమి పరిమాణం' : 'Land Size',
+                        isTeluguSelected ? '5 ఎకరాలు' : '5 Acres',
+                      ),
+                      _buildInfoRow(
+                        Icons.water_drop,
+                        isTeluguSelected
+                            ? 'నీటిపారుదల వనరులు'
+                            : 'Irrigation Sources',
+                        isTeluguSelected
+                            ? 'బోరు బావి, చెరువు'
+                            : 'Bore Well, Pond',
+                      ),
+                      _buildInfoRow(
+                        Icons.eco,
+                        isTeluguSelected ? 'ప్రధాన పంటలు' : 'Main Crops',
+                        isTeluguSelected
+                            ? 'వరి, పత్తి, కూరగాయలు'
+                            : 'Rice, Cotton, Vegetables',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isTeluguSelected ? 'అమ్మకాల చరిత్ర' : 'Sales History',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade800,
+                        ),
+                      ),
+                      const Divider(),
+                      _buildSaleItem(
+                        isTeluguSelected ? 'టమాటా' : 'Tomatoes',
+                        isTeluguSelected ? '50 కిలోలు' : '50 kg',
+                        '₹2,500',
+                        isTeluguSelected ? '15 రోజుల క్రితం' : '15 days ago',
+                      ),
+                      _buildSaleItem(
+                        isTeluguSelected ? 'వంగ' : 'Eggplant',
+                        isTeluguSelected ? '30 కిలోలు' : '30 kg',
+                        '₹1,800',
+                        isTeluguSelected ? '20 రోజుల క్రితం' : '20 days ago',
+                      ),
+                      _buildSaleItem(
+                        isTeluguSelected ? 'బంగాళాదుంప' : 'Potatoes',
+                        isTeluguSelected ? '100 కిలోలు' : '100 kg',
+                        '₹3,000',
+                        isTeluguSelected ? '1 నెల క్రితం' : '1 month ago',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
-                onPressed: () async {
-                  await _auth.signOut();
-                  Navigator.pushReplacementNamed(context, '/welcome');
+                onPressed: () {
+                  // Logout functionality
+                  Navigator.pushReplacementNamed(context, '/login');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade700,
-                  minimumSize: const Size.fromHeight(50),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
                 child: Text(
-                  currentLanguage == 'en' ? 'Logout' : 'లాగ్అవుట్',
+                  isTeluguSelected ? 'లాగ్ అవుట్' : 'Logout',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -186,166 +244,95 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
           ],
         ),
       ),
+      bottomNavigationBar: FarmerBottomNavigationBar(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onItemTapped,
+      ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildInfoRow(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          title,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.green.shade800,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProfileOption({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    String? subtitle,
-  }) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-      elevation: 0.5,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: Icon(icon, color: Colors.green.shade800),
-        title: Text(
-          title,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
-        subtitle: subtitle != null ? Text(subtitle) : null,
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: onTap,
-      ),
-    );
-  }
-
-  Widget _buildLanguageOption(
-    BuildContext context,
-    LanguageService languageService,
-    String currentLanguage,
-  ) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-      elevation: 0.5,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: Icon(Icons.language, color: Colors.green.shade800),
-        title: Text(
-          currentLanguage == 'en' ? 'Language' : 'భాష',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
-        subtitle: Text(currentLanguage == 'en' ? 'English' : 'తెలుగు'),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () {
-          _showLanguageBottomSheet(context, languageService, currentLanguage);
-        },
-      ),
-    );
-  }
-
-  void _showLanguageBottomSheet(
-    BuildContext context,
-    LanguageService languageService,
-    String currentLanguage,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: Colors.green.shade700, size: 20),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  children: [
-                    Text(
-                      currentLanguage == 'en'
-                          ? 'Select Language'
-                          : 'భాషను ఎంచుకోండి',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
+              Text(
+                label,
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+              const SizedBox(height: 4),
+              Text(value, style: const TextStyle(fontSize: 16)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSaleItem(
+    String crop,
+    String quantity,
+    String amount,
+    String date,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.green.shade100,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.eco, color: Colors.green.shade800, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  crop,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  quantity,
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                amount,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green.shade800,
                 ),
               ),
-              const Divider(),
-              _buildLanguageItem(
-                context: context,
-                title: 'English',
-                isSelected: currentLanguage == 'en',
-                onTap: () {
-                  languageService.changeLanguage('en');
-                  Navigator.pop(context);
-                },
-              ),
-              _buildLanguageItem(
-                context: context,
-                title: 'తెలుగు (Telugu)',
-                isSelected: currentLanguage == 'te',
-                onTap: () {
-                  languageService.changeLanguage('te');
-                  Navigator.pop(context);
-                },
+              Text(
+                date,
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
             ],
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildLanguageItem({
-    required BuildContext context,
-    required String title,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-        child: Row(
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-            const Spacer(),
-            if (isSelected)
-              Icon(Icons.check_circle, color: Colors.green.shade800),
-          ],
-        ),
+        ],
       ),
     );
   }
