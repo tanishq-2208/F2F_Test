@@ -3,6 +3,10 @@ import 'package:f2f/screens/customer_login_screen.dart';
 import 'package:f2f/screens/customer_registration_screen.dart';
 import 'package:f2f/screens/farmer_login_screen.dart';
 import 'package:f2f/screens/farmer_orders_screen.dart';
+import 'package:f2f/screens/farmers_fertilizers_screen.dart';
+import 'package:f2f/screens/farmers_tools_screen.dart';
+import 'package:f2f/screens/farmers_machinery_screen.dart'; // Add this import
+
 import 'package:f2f/screens/home_screen.dart';
 import 'package:f2f/screens/my_orders_screen.dart';
 import 'package:f2f/screens/payment_screen.dart';
@@ -22,6 +26,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:f2f/providers/language_provider.dart';
 import 'package:f2f/screens/profile_screen.dart';
 import 'package:f2f/screens/ai_search_screen.dart';
+import 'package:f2f/screens/farmers_tools_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -79,16 +84,17 @@ class MyApp extends StatelessWidget {
           routes: {
             '/my_orders': (context) => const MyOrdersScreen(),
             '/home': (context) => const HomeScreen(),
-            '/farmer_orders': (context) => const FarmerOrdersScreen(), // Add this line
-        '/status': (context) => const StatusScreen(),
+            '/farmer_orders': (context) => const FarmerOrdersScreen(),
+            '/status': (context) => const StatusScreen(),
             '/customer_home': (context) => const CustomerHomeScreen(),
             // Remove the static route for products since it needs a dynamic parameter
             '/upload_items': (context) => const UploadItemsScreen(),
-            '/farmer_register':
-                (context) => const RegistrationScreen(role: 'farmer'),
+            '/farmer_register': (context) => const RegistrationScreen(role: 'farmer'),
             '/farmer_login': (context) => const FarmerLoginScreen(),
             '/plant_analysis': (context) => const PlantAnalysisScreen(),
-            
+            '/farmer_tools': (context) => const FarmersToolsScreen(),
+            '/farmer_machinery': (context) => const FarmersMachineryScreen(), // Add this route
+            '/farmer_fertilizers': (context) => const FarmersFertilizersScreen(),
             '/profile': (context) => const ProfileScreen(),
             '/ai':
                 (context) => const AISearchScreen(
