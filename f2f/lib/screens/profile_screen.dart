@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:f2f/services/language_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Add this import
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -12,6 +13,25 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // Add the isFarmer method as a class method, not inside the build method
+  Future<bool> _isFarmer() async {
+    final user = _auth.currentUser;
+    if (user == null) return false;
+    
+    try {
+      // Check if the user exists in the farmers collection
+      final farmerDoc = await FirebaseFirestore.instance
+          .collection('farmers')
+          .where('userId', isEqualTo: user.uid)
+          .get();
+      
+      return farmerDoc.docs.isNotEmpty;
+    } catch (e) {
+      print('Error checking farmer status: $e');
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,8 +103,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               icon: Icons.circle,
               title: currentLanguage == 'en' ? 'Status' : 'స్థితి',
               subtitle: currentLanguage == 'en' ? 'Available' : 'అందుబాటులో ఉంది',
-              onTap: () {
-                Navigator.pushNamed(context, '/status');
+              onTap: () async {
+                // Check if the user is a farmer
+                final isFarmer = await _isFarmer();
+                
+                // Navigate to the appropriate screen based on user role
+                if (isFarmer) {
+                  Navigator.pushNamed(context, '/farmer_orders');
+                } else {
+                  Navigator.pushNamed(context, '/status');
+                }
               },
             ),
             _buildProfileOption(

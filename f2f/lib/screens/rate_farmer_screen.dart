@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/rating.dart';
 import '../services/farmer_service.dart';
+import '../services/order_service.dart';  // Add this import
 
 class RateFarmerScreen extends StatefulWidget {
   final String farmerId;
@@ -9,12 +10,12 @@ class RateFarmerScreen extends StatefulWidget {
   final String productName;
 
   const RateFarmerScreen({
-    Key? key,
+    super.key,
     required this.farmerId,
     required this.farmerName,
     required this.orderId,
     required this.productName,
-  }) : super(key: key);
+  });
 
   @override
   State<RateFarmerScreen> createState() => _RateFarmerScreenState();
@@ -58,6 +59,10 @@ class _RateFarmerScreenState extends State<RateFarmerScreen> {
       );
 
       if (success) {
+        // Mark the order as rated
+        final orderService = OrderService();
+        await orderService.markOrderAsRated(widget.orderId);
+        
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Rating submitted successfully')),

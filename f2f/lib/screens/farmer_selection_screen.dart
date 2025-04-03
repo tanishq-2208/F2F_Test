@@ -1,3 +1,4 @@
+import 'package:f2f/screens/payment_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
@@ -182,17 +183,22 @@ class _FarmerSelectionScreenState extends State<FarmerSelectionScreen> {
                             const SizedBox(height: 12),
                             SizedBox(
                               width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  // Handle buy now action
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green[700],
-                                ),
-                                child: Text(
-                                  currentLanguage == 'en' ? 'Buy Now' : 'ఇప్పుడే కొనండి',
-                                ),
-                              ),
+                              child: // In your product detail screen where the "Buy Now" button is located
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => PaymentScreen(
+                                              productImage: '', // Added required productImage parameter
+                                              productPrice: farmer['pricePerUnit'],
+                                              productName: widget.productName, availableQuantity: _farmers[index]['totalQuantity'],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: const Text('Buy Now'),
+                                    ),
                             ),
                           ],
                         ),

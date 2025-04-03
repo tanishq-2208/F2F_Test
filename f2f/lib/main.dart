@@ -2,8 +2,11 @@ import 'package:f2f/screens/customer_home_screen.dart';
 import 'package:f2f/screens/customer_login_screen.dart';
 import 'package:f2f/screens/customer_registration_screen.dart';
 import 'package:f2f/screens/farmer_login_screen.dart';
+import 'package:f2f/screens/farmer_orders_screen.dart';
 import 'package:f2f/screens/home_screen.dart';
 import 'package:f2f/screens/my_orders_screen.dart';
+import 'package:f2f/screens/payment_screen.dart';
+import 'package:f2f/screens/payment_success_screen.dart';
 import 'package:f2f/screens/products_screen.dart';
 import 'package:f2f/screens/registration_screen.dart';
 import 'package:f2f/screens/status_screen.dart';
@@ -69,7 +72,8 @@ class MyApp extends StatelessWidget {
       ),
       routes: {
         '/my_orders': (context) => const MyOrdersScreen(),
-        '/status': (context) => const StatusScreen(),  // Add this line
+        '/farmer_orders': (context) => const FarmerOrdersScreen(), // Add this line
+        '/status': (context) => const StatusScreen(),
         '/home': (context) => const HomeScreen(),
         '/customer_home': (context) => const CustomerHomeScreen(),
         '/products': (context) => const ProductsPage(),
@@ -77,8 +81,22 @@ class MyApp extends StatelessWidget {
         '/farmer_register':
             (context) => const RegistrationScreen(role: 'farmer'),
         '/farmer_login': (context) => const FarmerLoginScreen(),
+        '/payment': (context) {
+              // Get arguments passed during navigation
+              final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+              
+              // Use arguments if provided, otherwise use defaults
+              return PaymentScreen(
+                productName: args?['productName'] ?? 'Sample Product',
+                productPrice: args?['productPrice'] ?? 100.0,
+                productImage: args?['productImage'] ?? 'https://via.placeholder.com/150',
+                availableQuantity: args?['availableQuantity'] ?? 10,
+                farmerId: args?['farmerId'], // Add farmerId parameter
+                quantity: args?['quantity'] ?? 1, // Add quantity parameter
+              );
+            },
       },
-      home:  const CustomerHomeScreen(),
+      home: const WelcomeScreen(),
     );
   }
 }

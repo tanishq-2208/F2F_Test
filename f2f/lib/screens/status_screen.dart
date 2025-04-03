@@ -17,11 +17,14 @@ class _StatusScreenState extends State<StatusScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isLoading = true;
   List<Map<String, dynamic>> _sales = [];
+  List<Map<String, dynamic>> _orders = [];
+  String? _farmerId;
 
   @override
   void initState() {
     super.initState();
     _fetchSalesData();
+    _fetchOrdersData();
   }
 
   Future<void> _fetchSalesData() async {
@@ -130,127 +133,450 @@ class _StatusScreenState extends State<StatusScreen> {
     }
   }
 
+  // In the _fetchOrdersData method, ensure we're querying by the correct farmerId field
+  // Your _fetchOrdersData method is already correctly querying by farmerId
+  // But let's add some debugging to verify the data structure
+
+  Future<void> _fetchOrdersData() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      print('No user logged in');
+      setState(() => _isLoading = false);
+      return;
+    }
+  
+    try {
+      // Check if the user is a farmer
+      final farmerDoc = await _firestore
+          .collection('farmers')
+          .where('userId', isEqualTo: user.uid)
+          .get();
+  
+      if (farmerDoc.docs.isEmpty) {
+        print('User is not a farmer');
+        setState(() => _isLoading = false);
+        return;
+      }
+  
+      _farmerId = farmerDoc.docs.first.id;
+      print('Fetching orders for farmer ID: $_farmerId');
+  
+      // Get all orders for this farmer's products
+      final querySnapshot = await _firestore
+          .collection('orders')
+          .where('farmerId', isEqualTo: _farmerId)
+          .orderBy('orderDate', descending: true)
+          .get();
+  
+      print('Found ${querySnapshot.docs.length} orders for this farmer');
+      
+      // Debug the first order if available
+      if (querySnapshot.docs.isNotEmpty) {
+        print('Sample order data: ${querySnapshot.docs.first.data()}');
+      }
+      
+      final orders = querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          ...data,
+          'orderId': data['orderId'] ?? doc.id,
+          'docId': doc.id,
+        };
+      }).toList();
+  
+      setState(() {
+        _orders = orders;
+        _isLoading = false;
+      });
+      print('Orders data loaded successfully');
+    } catch (e) {
+      print('Error fetching orders data: $e');
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching orders: $e')),
+      );
+    }
+  }
+
+  Widget _buildOrderCard(Map<String, dynamic> order) {
+    final orderDate = (order['orderDate'] as Timestamp?)?.toDate() ?? DateTime.now();
+    final formattedDate = DateFormat('MMM dd, yyyy').format(orderDate);
+    final status = order['status'] ?? 'Processing';
+    final customerName = order['customerName'] ?? 'Customer';
+    final customerPhone = order['customerPhone'] ?? 'N/A';
+    final deliveryAddress = order['deliveryAddress'] ?? 'N/A';
+    
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Order #${order['orderId'] ?? ''}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: status == 'Delivered' ? Colors.green[100] : Colors.orange[100],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    status,
+                    style: TextStyle(
+                      color: status == 'Delivered' ? Colors.green[700] : Colors.orange[700],
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Date: $formattedDate',
+              style: const TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            
+            // Customer information section
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Customer: $customerName',
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  if (customerPhone != 'N/A')
+                    Text('Phone: $customerPhone'),
+                  if (deliveryAddress != 'N/A')
+                    Text('Address: $deliveryAddress'),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage(order['productImage'] ?? 'https://via.placeholder.com/150'),
+                      fit: BoxFit.cover,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        order['productName'] ?? 'Unknown Product',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Quantity: ${order['quantity'] ?? 0}',
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Total: ₹${(order['totalAmount'] ?? 0.0).toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            
+            // Add a deliver button if order is not delivered yet
+            if (status != 'Delivered' && _farmerId != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: ElevatedButton(
+                  onPressed: () => _markAsDelivered(order),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green[700],
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Mark as Delivered'),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Update the _markAsDelivered method to handle both sales and orders
+  Future<void> _markAsDelivered(Map<String, dynamic> item) async {
+    try {
+      // Check if this is a sale or an order based on available fields
+      if (item.containsKey('docId')) {
+        // This is an order
+        await _firestore
+            .collection('orders')
+            .doc(item['docId'])
+            .update({
+          'status': 'Delivered',
+          'deliveryDate': FieldValue.serverTimestamp(),
+          'isRated': false, // Initialize as not rated yet
+        });
+        
+        // Refresh the orders list
+        _fetchOrdersData();
+      } else if (item.containsKey('id')) {
+        // This is a sale
+        await _firestore
+            .collection('sales')
+            .doc(item['id'])
+            .update({
+          'status': 'completed',
+          'deliveryDate': FieldValue.serverTimestamp(),
+          'isRated': false, // Initialize as not rated yet
+        });
+        
+        // Refresh the sales list
+        _fetchSalesData();
+      } else {
+        throw Exception('Unknown item type - cannot update');
+      }
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Order marked as delivered!'),
+          backgroundColor: Colors.green[700],
+        ),
+      );
+    } catch (e) {
+      print('Error updating order/sale: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating: $e'),
+          backgroundColor: Colors.red[700],
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final languageService = Provider.of<LanguageService>(context);
     final currentLanguage = languageService.currentLocale.languageCode;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(currentLanguage == 'en' ? 'Sales Status' : 'అమ్మకాల స్థితి'),
-        backgroundColor: Colors.green.shade800,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _fetchSalesData,
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(currentLanguage == 'en' ? 'Status' : 'స్థితి'),
+          backgroundColor: Colors.green.shade800,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                _fetchSalesData();
+                _fetchOrdersData();
+              },
+            ),
+          ],
+          bottom: TabBar(
+            tabs: [
+              Tab(text: currentLanguage == 'en' ? 'Sales' : 'అమ్మకాలు'),
+              Tab(text: currentLanguage == 'en' ? 'Orders' : 'ఆర్డర్లు'),
+            ],
+            indicatorColor: Colors.white,
           ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _sales.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.receipt_long, size: 64, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      Text(
-                        currentLanguage == 'en' 
-                            ? 'No sales records found' 
-                            : 'అమ్మకాల రికార్డులు లేవు',
-                        style: const TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _fetchSalesData,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _sales.length,
-                    itemBuilder: (context, index) {
-                      final sale = _sales[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+        ),
+        body: TabBarView(
+          children: [
+            // Sales Tab
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _sales.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.receipt_long, size: 64, color: Colors.grey),
+                            const SizedBox(height: 16),
+                            Text(
+                              currentLanguage == 'en' 
+                                  ? 'No sales records found' 
+                                  : 'అమ్మకాల రికార్డులు లేవు',
+                              style: const TextStyle(fontSize: 16, color: Colors.grey),
+                            ),
+                          ],
                         ),
-                        child: Padding(
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _fetchSalesData,
+                        child: ListView.builder(
                           padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Sale header
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color: _getStatusColor(sale['status'] ?? ''),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    _getStatusText(sale['status'] ?? '', context),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    '₹${(sale['totalAmount'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
+                          itemCount: _sales.length,
+                          itemBuilder: (context, index) {
+                            final sale = _sales[index];
+                            final status = sale['status'] ?? '';
+                            
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              const SizedBox(height: 12),
-                              Text(
-                                '${currentLanguage == 'en' ? 'Date' : 'తేదీ'}: ${sale['formattedDate']}',
-                                style: const TextStyle(color: Colors.grey),
-                              ),
-                              
-                              // Products list
-                              const SizedBox(height: 12),
-                              const Divider(),
-                              const SizedBox(height: 8),
-                              Text(
-                                currentLanguage == 'en' ? 'Products' : 'ఉత్పత్తులు',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              ...(sale['products'] as List<dynamic>).map<Widget>((product) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          '${product['name']} (${product['quantity']} ${product['unit']})',
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Sale header
+                                    Row(
+                                      children: [
+                                        Container(
+                                          width: 12,
+                                          height: 12,
+                                          decoration: BoxDecoration(
+                                            color: _getStatusColor(status),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          _getStatusText(status, context),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        Text(
+                                          '₹${(sale['totalAmount'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      '${currentLanguage == 'en' ? 'Date' : 'తేదీ'}: ${sale['formattedDate']}',
+                                      style: const TextStyle(color: Colors.grey),
+                                    ),
+                                    
+                                    // Products list
+                                    const SizedBox(height: 12),
+                                    const Divider(),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      currentLanguage == 'en' ? 'Products' : 'ఉత్పత్తులు',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ...(sale['products'] as List<dynamic>).map<Widget>((product) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(bottom: 8),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                '${product['name']} (${product['quantity']} ${product['unit']})',
+                                              ),
+                                            ),
+                                            Text(
+                                              '₹${(product['price'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }),
+                                    
+                                    // Add a deliver button if order is not delivered yet
+                                    if (status.toLowerCase() != 'delivered' && status.toLowerCase() != 'completed')
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 16.0),
+                                        child: ElevatedButton(
+                                          onPressed: () => _markAsDelivered(sale),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.green[700],
+                                            foregroundColor: Colors.white,
+                                          ),
+                                          child: Text(currentLanguage == 'en' ? 'Mark as Delivered' : 'డెలివరీ చేసినట్లు గుర్తించండి'),
                                         ),
                                       ),
-                                      Text(
-                                        '₹${(product['price'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }),
-                            ],
-                          ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
-                ),
+                      ),
+            
+            // In the build method, update the Orders Tab section:
+            // Orders Tab
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _orders.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.shopping_bag_outlined, size: 64, color: Colors.grey),
+                            const SizedBox(height: 16),
+                            Text(
+                              currentLanguage == 'en' 
+                                  ? 'No customer orders found for your products' 
+                                  : 'మీ ఉత్పత్తులకోసం వినియోగదారు ఆర్డర్లు కనుగొనబడలేదు',
+                              style: const TextStyle(fontSize: 16, color: Colors.grey),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _fetchOrdersData,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _orders.length,
+                          itemBuilder: (context, index) {
+                            final order = _orders[index];
+                            return _buildOrderCard(order);
+                          },
+                        ),
+                      ),
+          ],
+        ),
+      ),
     );
   }
 }
