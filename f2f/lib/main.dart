@@ -5,7 +5,8 @@ import 'package:f2f/screens/farmer_login_screen.dart';
 import 'package:f2f/screens/farmer_orders_screen.dart';
 import 'package:f2f/screens/farmers_fertilizers_screen.dart';
 import 'package:f2f/screens/farmers_tools_screen.dart';
-import 'package:f2f/screens/farmers_machinery_screen.dart'; // Add this import
+import 'package:f2f/screens/farmers_machinery_screen.dart';
+import 'package:f2f/screens/wallet_screen.dart'; // Add this import
 
 import 'package:f2f/screens/home_screen.dart';
 import 'package:f2f/screens/my_orders_screen.dart';
@@ -59,6 +60,7 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'Farm2Fork Connect',
           locale: languageService.currentLocale,
+          debugShowCheckedModeBanner: false,
           supportedLocales: const [
             Locale('en', ''), // English
             Locale('te', ''), // Telugu
@@ -94,13 +96,11 @@ class MyApp extends StatelessWidget {
             '/farmer_login': (context) => const FarmerLoginScreen(),
             '/plant_analysis': (context) => const PlantAnalysisScreen(),
             '/farmer_tools': (context) => const FarmersToolsScreen(),
-            '/farmer_machinery':
-                (context) => const FarmersMachineryScreen(), // Add this route
-            '/farmer_fertilizers':
-                (context) => const FarmersFertilizersScreen(),
+            '/farmer_machinery': (context) => const FarmersMachineryScreen(), // Add this route
+            '/farmer_fertilizers': (context) => const FarmersFertilizersScreen(),
             '/profile': (context) => const ProfileScreen(),
-            '/ai':
-                (context) => const AISearchScreen(
+            '/wallet': (context) => const WalletScreen(), // Add this route
+            '/ai': (context) => const AISearchScreen(
                   diseaseName: 'General',
                   searchType: 'information',
                 ),
@@ -123,7 +123,7 @@ class MyApp extends StatelessWidget {
             },
           },
 
-          home: const WelcomeScreen(),
+          home: const CustomerLoginScreen(), // Set the initial route to WelcomeScreen,
         );
       },
     );
