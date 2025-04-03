@@ -88,9 +88,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF1A5336), // Updated background color
       appBar: AppBar(
         title: const Text('Farm2Fork Market'),
-        // Removed the action icons from here
+        backgroundColor: const Color(0xFF266241), // Updated app bar color
+        foregroundColor: Colors.white,
       ),
       body: RefreshIndicator(
         onRefresh: _loadProducts,
@@ -117,9 +119,32 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: CustomerBottomNavigationBar(
-        selectedIndex: _selectedIndex,
-        onItemSelected: _onNavigationItemSelected,
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        height: 70, // Increased height
+        decoration: BoxDecoration(
+          color: const Color(0xFFD8E6C9), // Updated color
+          borderRadius: BorderRadius.circular(30.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30.0),
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              canvasColor: const Color(0xFFD8E6C9),
+            ),
+            child: CustomerBottomNavigationBar(
+              selectedIndex: _selectedIndex,
+              onItemSelected: _onNavigationItemSelected,
+            ),
+          ),
+        ),
       ),
     );
   }

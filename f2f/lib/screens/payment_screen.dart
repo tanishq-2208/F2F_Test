@@ -112,9 +112,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
     double totalPrice = widget.productPrice * quantity;
 
     return Scaffold(
+      backgroundColor: const Color(0xFF1A5336), // Updated background color
       appBar: AppBar(
         title: const Text('Checkout'),
-        backgroundColor: Colors.green[700],
+        backgroundColor: const Color(0xFF266241), // Updated app bar color
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -127,6 +128,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               // Product summary
               Card(
                 elevation: 4,
+                color: const Color(0xFFECF6E5), // Updated card color
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
@@ -455,12 +457,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green[700],
+                    backgroundColor: const Color(0xFF266241), // Updated button color
                     foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   child: const Text(
-                    'Pay Now',
-                    style: TextStyle(fontSize: 18),
+                    'Proceed to Payment',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),

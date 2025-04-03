@@ -86,9 +86,10 @@ class _FarmersToolsScreenState extends State<FarmersToolsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF1A5336), // Updated background color
       appBar: AppBar(
         title: const Text('Farming Tools & Equipment'),
-        backgroundColor: Colors.green[700],
+        backgroundColor: const Color(0xFF266241), // Updated app bar color
         foregroundColor: Colors.white,
       ),
       body: Column(
@@ -104,9 +105,32 @@ class _FarmersToolsScreenState extends State<FarmersToolsScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: CustomerBottomNavigationBar(
-        selectedIndex: _selectedIndex,
-        onItemSelected: _onNavigationItemSelected,
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        height: 70,
+        decoration: BoxDecoration(
+          color: const Color(0xFFD8E6C9),
+          borderRadius: BorderRadius.circular(30.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30.0),
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              canvasColor: const Color(0xFFD8E6C9),
+            ),
+            child: CustomerBottomNavigationBar(
+              selectedIndex: _selectedIndex,
+              onItemSelected: _onNavigationItemSelected,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -115,6 +139,7 @@ class _FarmersToolsScreenState extends State<FarmersToolsScreen> {
     return Container(
       height: 60,
       padding: const EdgeInsets.symmetric(vertical: 8),
+      color: const Color(0xFF1A5336), // Match background color
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: _categories.length,
@@ -132,7 +157,7 @@ class _FarmersToolsScreenState extends State<FarmersToolsScreen> {
                 });
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: isSelected ? Colors.green[700] : Colors.grey[200],
+                backgroundColor: isSelected ? const Color(0xFF266241) : Colors.grey[200],
                 foregroundColor: isSelected ? Colors.white : Colors.black87,
                 elevation: isSelected ? 2 : 0,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -176,6 +201,7 @@ class _FarmersToolsScreenState extends State<FarmersToolsScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
+      color: const Color(0xFFECF6E5), // Updated card color
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -285,7 +311,7 @@ class _FarmersToolsScreenState extends State<FarmersToolsScreen> {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700],
+                  backgroundColor: const Color(0xFF266241), // Updated button color
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),

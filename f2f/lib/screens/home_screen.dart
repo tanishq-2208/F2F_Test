@@ -126,14 +126,21 @@ class _HomeScreenState extends State<HomeScreen>
     _initializeContent(context);
 
     return Scaffold(
+      backgroundColor: const Color(0xFF1A5336), // Lighter dark green background
       appBar: AppBar(
         title: Text(
           isTeluguSelected ? "రైతు మార్కెట్‌ప్లేస్" : "Farmer's Marketplace",
+          style: const TextStyle(
+            color: Colors.white, // Changed text color to white
+          ),
         ),
-        backgroundColor: Colors.green,
+        backgroundColor: const Color(0xFF266241), // Lighter green for app bar
         actions: [
           IconButton(
-            icon: const Icon(Icons.language),
+            icon: const Icon(
+              Icons.language,
+              color: Colors.white, // Ensuring icon is also white
+            ),
             onPressed: () {
               // Toggle language between English and Telugu
               languageProvider.setLanguage(isTeluguSelected ? 'en' : 'te');
@@ -148,10 +155,33 @@ class _HomeScreenState extends State<HomeScreen>
           _buildHomeContent(isTeluguSelected),
         ], // Pass the language flag here
       ),
-      bottomNavigationBar: FarmerBottomNavigationBar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
-      ),
+      bottomNavigationBar: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            height: 70, // Increased height
+            decoration: BoxDecoration(
+              color: const Color(0xFFD8E6C9), // Using solid color
+              borderRadius: BorderRadius.circular(30.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(30.0),
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  canvasColor: const Color(0xFFD8E6C9),
+                ),
+                child: FarmerBottomNavigationBar(
+                  selectedIndex: _selectedIndex,
+                  onItemTapped: _onItemTapped,
+                ),
+              ),
+            ),
+          ),
     );
   }
 
@@ -241,7 +271,7 @@ class _HomeScreenState extends State<HomeScreen>
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green,
+                    color: Colors.white, // Changed to white for better contrast
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -249,6 +279,7 @@ class _HomeScreenState extends State<HomeScreen>
                   return Card(
                     elevation: 4,
                     margin: const EdgeInsets.only(bottom: 16),
+                    color: const Color(0xFFECF6E5), // Updated to specified color code
                     child: ListTile(
                       contentPadding: const EdgeInsets.all(16),
                       leading: CircleAvatar(
@@ -257,26 +288,26 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                       title: Text(
                         category['title'],
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          color: Colors.green[800], // Darker text for contrast with light background
                         ),
                       ),
-                      trailing: const Icon(Icons.arrow_forward_ios),
-                      // In the _buildHomeContent method, update the category onTap handler
+                      trailing: Icon(Icons.arrow_forward_ios, color: Colors.green[800]),
                       onTap: () {
-                      // Navigate based on category title
-                      if (category['title'] == 'Hand Tools & Gardening Equipment' || 
-                          category['title'] == 'చేతి పనిముట్లు & తోటపని పరికరాలు') {
-                        Navigator.pushNamed(context, '/farmer_tools');
-                      } else if (category['title'] == 'Machinery & Equipment' || 
-                               category['title'] == 'యంత్రాలు & పరికరాలు') {
-                        Navigator.pushNamed(context, '/farmer_machinery');
-                      } else if (category['title'] == 'Seeds, Fertilizers & Soil Enhancers' || 
-                               category['title'] == 'విత్తనాలు, ఎరువులు & నేల మెరుగుదలలు') {
-                        Navigator.pushNamed(context, '/farmer_fertilizers');
-                      }
-                      // Add other category navigations here as needed
+                        // Navigate based on category title
+                        if (category['title'] == 'Hand Tools & Gardening Equipment' || 
+                            category['title'] == 'చేతి పనిముట్లు & తోటపని పరికరాలు') {
+                          Navigator.pushNamed(context, '/farmer_tools');
+                        } else if (category['title'] == 'Machinery & Equipment' || 
+                                category['title'] == 'యంత్రాలు & పరికరాలు') {
+                          Navigator.pushNamed(context, '/farmer_machinery');
+                        } else if (category['title'] == 'Seeds, Fertilizers & Soil Enhancers' || 
+                                category['title'] == 'విత్తనాలు, ఎరువులు & నేల మెరుగుదలలు') {
+                          Navigator.pushNamed(context, '/farmer_fertilizers');
+                        }
+                        // Add other category navigations here as needed
                       },
                     ),
                   );
@@ -284,6 +315,10 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
           ),
+          
+          // "Start your green journey" button removed
+          
+          const SizedBox(height: 20),
         ],
       ),
     );

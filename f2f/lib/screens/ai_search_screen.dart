@@ -188,8 +188,9 @@ class _AISearchScreenState extends State<AISearchScreen> {
   Widget build(BuildContext context) {
     final languageProvider = Provider.of<LanguageProvider>(context);
     final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
-
+    
     return Scaffold(
+      backgroundColor: const Color(0xFF1A5336),
       appBar: AppBar(
         centerTitle: true,
         title: Text(
@@ -201,7 +202,7 @@ class _AISearchScreenState extends State<AISearchScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: const Color(0xff1A5319),
+        backgroundColor: const Color(0xFF266241),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [

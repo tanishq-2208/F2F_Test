@@ -119,20 +119,18 @@ class _UploadItemsScreenState extends State<UploadItemsScreen> {
     final double width = screenSize.width;
 
     return Scaffold(
+      backgroundColor: const Color(0xFF1A5336), // Updated background color
       appBar: AppBar(
         title: Text(
           isTeluguSelected ? 'వస్తువులను అప్‌లోడ్ చేయండి' : 'Upload Items',
         ),
-        backgroundColor: Colors.green.shade800,
+        backgroundColor: const Color(0xFF266241), // Updated app bar color
+        foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.green.shade50, Colors.white],
-          ),
+        decoration: const BoxDecoration(
+          color: Color(0xFF1A5336), // Updated background color
         ),
         child: Center(
           child: Column(
@@ -142,11 +140,11 @@ class _UploadItemsScreenState extends State<UploadItemsScreen> {
                 width: width * 0.9,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: const Color(0xFFECF6E5), // Updated card color
                   borderRadius: BorderRadius.circular(15),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.green.withOpacity(0.1),
+                      color: Colors.black.withOpacity(0.1),
                       blurRadius: 10,
                       spreadRadius: 1,
                     ),
@@ -223,9 +221,32 @@ class _UploadItemsScreenState extends State<UploadItemsScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: FarmerBottomNavigationBar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        height: 70, // Increased height
+        decoration: BoxDecoration(
+          color: const Color(0xFFD8E6C9), // Updated color
+          borderRadius: BorderRadius.circular(30.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30.0),
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              canvasColor: const Color(0xFFD8E6C9),
+            ),
+            child: FarmerBottomNavigationBar(
+              selectedIndex: _selectedIndex,
+              onItemTapped: _onItemTapped,
+            ),
+          ),
+        ),
       ),
     );
   }
