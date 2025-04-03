@@ -263,7 +263,21 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                       ),
                       trailing: const Icon(Icons.arrow_forward_ios),
-                      onTap: () {},
+                      // In the _buildHomeContent method, update the category onTap handler
+                      onTap: () {
+                      // Navigate based on category title
+                      if (category['title'] == 'Hand Tools & Gardening Equipment' || 
+                          category['title'] == 'చేతి పనిముట్లు & తోటపని పరికరాలు') {
+                        Navigator.pushNamed(context, '/farmer_tools');
+                      } else if (category['title'] == 'Machinery & Equipment' || 
+                               category['title'] == 'యంత్రాలు & పరికరాలు') {
+                        Navigator.pushNamed(context, '/farmer_machinery');
+                      } else if (category['title'] == 'Seeds, Fertilizers & Soil Enhancers' || 
+                               category['title'] == 'విత్తనాలు, ఎరువులు & నేల మెరుగుదలలు') {
+                        Navigator.pushNamed(context, '/farmer_fertilizers');
+                      }
+                      // Add other category navigations here as needed
+                      },
                     ),
                   );
                 }),
