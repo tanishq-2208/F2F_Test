@@ -88,9 +88,28 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // In the AppBar section of the build method
       appBar: AppBar(
-        title: const Text('Farm2Fork Market'),
-        // Removed the action icons from here
+        title: const Text('Farm2Fresh'),
+        backgroundColor: Colors.green,
+        actions: [
+        // Wallet icon with image
+        Padding(
+          padding: const EdgeInsets.only(right: 16.0),
+          child: InkWell(
+            onTap: () {
+              Navigator.pushNamed(context, '/wallet');
+            },
+            child: Image.asset(
+              'assets/images/wallet.png',
+              width: 24,
+              height: 24,
+              // Remove the color property to show the image in its original colors
+            ),
+          ),
+        ),
+        // Other existing action buttons
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _loadProducts,
