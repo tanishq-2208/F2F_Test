@@ -79,8 +79,9 @@ class MyApp extends StatelessWidget {
           routes: {
             '/my_orders': (context) => const MyOrdersScreen(),
             '/home': (context) => const HomeScreen(),
-            '/farmer_orders': (context) => const FarmerOrdersScreen(), // Add this line
-        '/status': (context) => const StatusScreen(),
+            '/farmer_orders':
+                (context) => const FarmerOrdersScreen(), // Add this line
+            '/status': (context) => const StatusScreen(),
             '/customer_home': (context) => const CustomerHomeScreen(),
             // Remove the static route for products since it needs a dynamic parameter
             '/upload_items': (context) => const UploadItemsScreen(),
@@ -88,29 +89,33 @@ class MyApp extends StatelessWidget {
                 (context) => const RegistrationScreen(role: 'farmer'),
             '/farmer_login': (context) => const FarmerLoginScreen(),
             '/plant_analysis': (context) => const PlantAnalysisScreen(),
-            
+
             '/profile': (context) => const ProfileScreen(),
             '/ai':
                 (context) => const AISearchScreen(
                   diseaseName: 'General',
                   searchType: 'information',
                 ),
-              '/payment': (context) {
+            '/payment': (context) {
               // Get arguments passed during navigation
-              final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-              
+              final args =
+                  ModalRoute.of(context)?.settings.arguments
+                      as Map<String, dynamic>?;
+
               // Use arguments if provided, otherwise use defaults
               return PaymentScreen(
                 productName: args?['productName'] ?? 'Sample Product',
                 productPrice: args?['productPrice'] ?? 100.0,
-                productImage: args?['productImage'] ?? 'https://via.placeholder.com/150',
+                productImage:
+                    args?['productImage'] ?? 'https://via.placeholder.com/150',
                 availableQuantity: args?['availableQuantity'] ?? 10,
                 farmerId: args?['farmerId'], // Add farmerId parameter
                 quantity: args?['quantity'] ?? 1, // Add quantity parameter
               );
-          },},
+            },
+          },
 
-          home: const WelcomeScreen(),
+          home: const CustomerHomeScreen(),
         );
       },
     );
