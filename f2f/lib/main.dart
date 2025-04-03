@@ -123,7 +123,7 @@ class MyApp extends StatelessWidget {
             },
           },
 
-          home: const CustomerLoginScreen(), // Set the initial route to WelcomeScreen,
+          home: const CustomerHomeScreen(),
         );
       },
     );
