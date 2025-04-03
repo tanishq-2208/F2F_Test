@@ -1,5 +1,6 @@
 import 'package:f2f/screens/payment_success_screen.dart';
 import 'package:f2f/services/order_service.dart';
+import 'package:f2f/services/wallet_service.dart'; // Add this import
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -33,6 +34,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   final TextEditingController _stateController = TextEditingController();
   final TextEditingController _zipController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  bool _isProcessing = false; // Add this variable
+  String _paymentMethod = 'Wallet'; // Default payment method
 
   @override
   void dispose() {
@@ -104,6 +107,88 @@ class _PaymentScreenState extends State<PaymentScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not launch payment page')),
       );
+    }
+  }
+
+  // Add this method to process wallet payment
+  Future<void> _processWalletPayment() async {
+    setState(() {
+      _isProcessing = true;
+    });
+
+    // Calculate total amount
+    final totalAmount = widget.productPrice * quantity + 40; // Include delivery fee
+    
+    // Check if wallet has enough balance
+    final walletService = WalletService();
+    final hasEnough = await walletService.hasEnoughBalance(totalAmount);
+    
+    if (!hasEnough) {
+      setState(() {
+        _isProcessing = false;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Insufficient wallet balance. Please add money to your wallet.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      
+      // Navigate to wallet screen
+      if (!mounted) return;
+      Navigator.pushNamed(context, '/wallet');
+      return;
+    }
+
+    // Deduct amount from wallet
+    final description = 'Purchase: ${widget.productName} x $quantity';
+    await walletService.deductAmount(totalAmount, description);
+
+    // Create the order in Firestore
+    final orderService = OrderService();
+    final fullAddress = '${_addressController.text}, ${_cityController.text}, ${_stateController.text} - ${_zipController.text}';
+    
+    try {
+      final orderId = await orderService.createOrder(
+        productName: widget.productName,
+        productPrice: widget.productPrice,
+        quantity: quantity,
+        productImage: widget.productImage,
+        address: _addressController.text,
+        city: _cityController.text,
+        state: _stateController.text,
+        zipCode: _zipController.text,
+        phone: _phoneController.text,
+        farmerId: widget.farmerId ?? '',
+      );
+      
+      // Navigate to success screen
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PaymentSuccessScreen(
+            productName: widget.productName,
+            productPrice: widget.productPrice,
+            quantity: quantity,
+            deliveryAddress: fullAddress,
+            orderId: orderId,
+            farmerId: widget.farmerId ?? '',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error creating order: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
     }
   }
 
@@ -437,6 +522,49 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           ),
                         ],
                       ),
+                      
+                      // Add payment method selection
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Payment Method',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: RadioListTile<String>(
+                              title: const Text('Wallet'),
+                              value: 'Wallet',
+                              groupValue: _paymentMethod,
+                              onChanged: (value) {
+                                setState(() {
+                                  _paymentMethod = value!;
+                                });
+                              },
+                              activeColor: Colors.green[700],
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                          Expanded(
+                            child: RadioListTile<String>(
+                              title: const Text('Razorpay'),
+                              value: 'Razorpay',
+                              groupValue: _paymentMethod,
+                              onChanged: (value) {
+                                setState(() {
+                                  _paymentMethod = value!;
+                                });
+                              },
+                              activeColor: Colors.green[700],
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -449,20 +577,49 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      _launchRazorpay();
-                    }
-                  },
+                  onPressed: _isProcessing 
+                    ? null 
+                    : () {
+                        if (_formKey.currentState!.validate()) {
+                          if (_paymentMethod == 'Wallet') {
+                            _processWalletPayment();
+                          } else {
+                            _launchRazorpay();
+                          }
+                        }
+                      },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green[700],
                     foregroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.grey,
                   ),
-                  child: const Text(
-                    'Pay Now',
-                    style: TextStyle(fontSize: 18),
-                  ),
+                  child: _isProcessing
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'Pay Now',
+                        style: TextStyle(fontSize: 18),
+                      ),
                 ),
+              ),
+              
+              // Add wallet balance display
+              FutureBuilder<double>(
+                future: WalletService().getBalance(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && _paymentMethod == 'Wallet') {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'Current wallet balance: ₹${snapshot.data!.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
               ),
             ],
           ),
