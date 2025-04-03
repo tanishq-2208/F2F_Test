@@ -1,5 +1,6 @@
 import 'package:f2f/screens/payment_success_screen.dart';
 import 'package:f2f/services/order_service.dart';
+import 'package:f2f/services/wallet_service.dart'; // Add this import
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -10,7 +11,7 @@ class PaymentScreen extends StatefulWidget {
   final int availableQuantity;
   final String? farmerId; // Add this parameter
   final int? quantity; // Add this parameter
-  
+
   const PaymentScreen({
     super.key,
     required this.productName,
@@ -20,7 +21,7 @@ class PaymentScreen extends StatefulWidget {
     this.farmerId, // Add to constructor
     this.quantity,
   });
-  
+
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
 }
@@ -33,6 +34,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   final TextEditingController _stateController = TextEditingController();
   final TextEditingController _zipController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  bool _isProcessing = false; // Add this variable
+  String _paymentMethod = 'Wallet'; // Default payment method
 
   @override
   void dispose() {
@@ -46,19 +49,20 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   void _launchRazorpay() async {
     final Uri url = Uri.parse('https://rzp.io/rzp/0e06EW39');
-    
+
     if (await canLaunchUrl(url)) {
       // Launch the URL and wait for it to complete
       final result = await launchUrl(url, mode: LaunchMode.externalApplication);
-      
+
       if (result) {
         // This is a simplification since we can't actually detect payment success from the URL launch
         // In a real app, you would implement a webhook or callback from Razorpay
-        
+
         // Create the order in Firestore
         final orderService = OrderService();
-        final fullAddress = '${_addressController.text}, ${_cityController.text}, ${_stateController.text} - ${_zipController.text}';
-        
+        final fullAddress =
+            '${_addressController.text}, ${_cityController.text}, ${_stateController.text} - ${_zipController.text}';
+
         try {
           final orderId = await orderService.createOrder(
             productName: widget.productName,
@@ -70,29 +74,31 @@ class _PaymentScreenState extends State<PaymentScreen> {
             state: _stateController.text,
             zipCode: _zipController.text,
             phone: _phoneController.text,
-            farmerId: widget.farmerId ?? '', // Pass the farmerId with null check
+            farmerId:
+                widget.farmerId ?? '', // Pass the farmerId with null check
           );
-          
+
           // Navigate to success screen
           if (!mounted) return;
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => PaymentSuccessScreen(
-                productName: widget.productName,
-                productPrice: widget.productPrice,
-                quantity: quantity,
-                deliveryAddress: fullAddress,
-                orderId: orderId,
-                farmerId: widget.farmerId ?? '', // Add null check here too
-              ),
+              builder:
+                  (context) => PaymentSuccessScreen(
+                    productName: widget.productName,
+                    productPrice: widget.productPrice,
+                    quantity: quantity,
+                    deliveryAddress: fullAddress,
+                    orderId: orderId,
+                    farmerId: widget.farmerId ?? '', // Add null check here too
+                  ),
             ),
           );
         } catch (e) {
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error creating order: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error creating order: $e')));
         }
       } else {
         if (!mounted) return;
@@ -104,6 +110,93 @@ class _PaymentScreenState extends State<PaymentScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not launch payment page')),
       );
+    }
+  }
+
+  // Add this method to process wallet payment
+  Future<void> _processWalletPayment() async {
+    setState(() {
+      _isProcessing = true;
+    });
+
+    // Calculate total amount
+    final totalAmount =
+        widget.productPrice * quantity + 40; // Include delivery fee
+
+    // Check if wallet has enough balance
+    final walletService = WalletService();
+    final hasEnough = await walletService.hasEnoughBalance(totalAmount);
+
+    if (!hasEnough) {
+      setState(() {
+        _isProcessing = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Insufficient wallet balance. Please add money to your wallet.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+
+      // Navigate to wallet screen
+      if (!mounted) return;
+      Navigator.pushNamed(context, '/wallet');
+      return;
+    }
+
+    // Deduct amount from wallet
+    final description = 'Purchase: ${widget.productName} x $quantity';
+    await walletService.deductAmount(totalAmount, description);
+
+    // Create the order in Firestore
+    final orderService = OrderService();
+    final fullAddress =
+        '${_addressController.text}, ${_cityController.text}, ${_stateController.text} - ${_zipController.text}';
+
+    try {
+      final orderId = await orderService.createOrder(
+        productName: widget.productName,
+        productPrice: widget.productPrice,
+        quantity: quantity,
+        productImage: widget.productImage,
+        address: _addressController.text,
+        city: _cityController.text,
+        state: _stateController.text,
+        zipCode: _zipController.text,
+        phone: _phoneController.text,
+        farmerId: widget.farmerId ?? '',
+      );
+
+      // Navigate to success screen
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => PaymentSuccessScreen(
+                productName: widget.productName,
+                productPrice: widget.productPrice,
+                quantity: quantity,
+                deliveryAddress: fullAddress,
+                orderId: orderId,
+                farmerId: widget.farmerId ?? '',
+              ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error creating order: $e')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
     }
   }
 
@@ -171,9 +264,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Quantity selector
               Card(
                 elevation: 4,
@@ -228,16 +321,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Cannot exceed available quantity'),
+                                    content: Text(
+                                      'Cannot exceed available quantity',
+                                    ),
                                     duration: Duration(seconds: 2),
                                   ),
                                 );
                               }
                             },
                             icon: const Icon(Icons.add_circle_outline),
-                            color: quantity < widget.availableQuantity 
-                                ? Colors.green[700] 
-                                : Colors.grey[400],
+                            color:
+                                quantity < widget.availableQuantity
+                                    ? Colors.green[700]
+                                    : Colors.grey[400],
                             iconSize: 32,
                           ),
                         ],
@@ -248,7 +344,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           'Available: ${widget.availableQuantity} units',
                           style: TextStyle(
                             fontSize: 14,
-                            color: widget.availableQuantity < 5 ? Colors.red : Colors.grey[600],
+                            color:
+                                widget.availableQuantity < 5
+                                    ? Colors.red
+                                    : Colors.grey[600],
                             fontStyle: FontStyle.italic,
                           ),
                         ),
@@ -257,9 +356,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Delivery address
               Card(
                 elevation: 4,
@@ -360,9 +459,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Order summary
               Card(
                 elevation: 4,
@@ -439,25 +538,77 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           ),
                         ],
                       ),
+
+                      // Add payment method selection
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Payment Method',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: RadioListTile<String>(
+                              title: const Text('Wallet'),
+                              value: 'Wallet',
+                              groupValue: _paymentMethod,
+                              onChanged: (value) {
+                                setState(() {
+                                  _paymentMethod = value!;
+                                });
+                              },
+                              activeColor: Colors.green[700],
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                          Expanded(
+                            child: RadioListTile<String>(
+                              title: const Text('Razorpay'),
+                              value: 'Razorpay',
+                              groupValue: _paymentMethod,
+                              onChanged: (value) {
+                                setState(() {
+                                  _paymentMethod = value!;
+                                });
+                              },
+                              activeColor: Colors.green[700],
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Pay now button
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      _launchRazorpay();
-                    }
-                  },
+                  onPressed:
+                      _isProcessing
+                          ? null
+                          : () {
+                            if (_formKey.currentState!.validate()) {
+                              if (_paymentMethod == 'Wallet') {
+                                _processWalletPayment();
+                              } else {
+                                _launchRazorpay();
+                              }
+                            }
+                          },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF266241), // Updated button color
+                    backgroundColor: const Color(
+                      0xFF266241,
+                    ), // Updated button color
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -468,6 +619,26 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
+              ),
+
+              // Add wallet balance display
+              FutureBuilder<double>(
+                future: WalletService().getBalance(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && _paymentMethod == 'Wallet') {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'Current wallet balance: ₹${snapshot.data!.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
               ),
             ],
           ),

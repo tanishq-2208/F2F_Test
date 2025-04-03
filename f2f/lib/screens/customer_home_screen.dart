@@ -23,7 +23,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     setState(() {
       _selectedIndex = index;
     });
-    
+
     // Navigation logic
     switch (index) {
       case 0: // Home
@@ -63,7 +63,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       // Replace with actual API call to fetch products
       final products = await ProductService.getProducts();
@@ -80,19 +80,39 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   }
 
   List<Product> get _filteredProducts {
-    return _products.where((product) => 
-      product.category.toLowerCase() == _selectedCategory.toLowerCase()
-    ).toList();
+    return _products
+        .where(
+          (product) =>
+              product.category.toLowerCase() == _selectedCategory.toLowerCase(),
+        )
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A5336), // Updated background color
+      // In the AppBar section of the build method
       appBar: AppBar(
-        title: const Text('Farm2Fork Market'),
-        backgroundColor: const Color(0xFF266241), // Updated app bar color
-        foregroundColor: Colors.white,
+        title: const Text('Farm2Fresh'),
+        backgroundColor: Colors.green,
+        actions: [
+          // Wallet icon with image
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: InkWell(
+              onTap: () {
+                Navigator.pushNamed(context, '/wallet');
+              },
+              child: Image.asset(
+                'assets/images/wallet.png',
+                width: 24,
+                height: 24,
+                // Remove the color property to show the image in its original colors
+              ),
+            ),
+          ),
+          // Other existing action buttons
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _loadProducts,
@@ -103,18 +123,18 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             children: [
               // Ad Banner Carousel
               _buildBannerCarousel(),
-              
+
               const SizedBox(height: 20),
-              
+
               // Category Selection
               _buildCategorySelector(),
-              
+
               const SizedBox(height: 16),
-              
+
               // Products Grid
-              _isLoading 
-                ? const Center(child: CircularProgressIndicator())
-                : _buildProductsGrid(),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildProductsGrid(),
             ],
           ),
         ),
@@ -136,9 +156,9 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(30.0),
           child: Theme(
-            data: Theme.of(context).copyWith(
-              canvasColor: const Color(0xFFD8E6C9),
-            ),
+            data: Theme.of(
+              context,
+            ).copyWith(canvasColor: const Color(0xFFD8E6C9)),
             child: CustomerBottomNavigationBar(
               selectedIndex: _selectedIndex,
               onItemSelected: _onNavigationItemSelected,
@@ -155,7 +175,8 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         SizedBox(
           height: 180,
           child: PageView.builder(
-            controller: _bannerController, // Fix: Changed from bannerController to _bannerController
+            controller:
+                _bannerController, // Fix: Changed from bannerController to _bannerController
             itemCount: _bannerImages.length,
             itemBuilder: (context, index) {
               return Container(
@@ -178,9 +199,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         color: Colors.grey[300],
-                        child: const Center(
-                          child: Text('Image not available'),
-                        ),
+                        child: const Center(child: Text('Image not available')),
                       );
                     },
                   ),
@@ -213,10 +232,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         children: [
           const Text(
             'Categories',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           Row(
@@ -229,12 +245,14 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     });
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _selectedCategory == 'Fruits' 
-                        ? Colors.green 
-                        : Colors.grey[300],
-                    foregroundColor: _selectedCategory == 'Fruits' 
-                        ? Colors.white 
-                        : Colors.black,
+                    backgroundColor:
+                        _selectedCategory == 'Fruits'
+                            ? Colors.green
+                            : Colors.grey[300],
+                    foregroundColor:
+                        _selectedCategory == 'Fruits'
+                            ? Colors.white
+                            : Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -251,12 +269,14 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     });
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _selectedCategory == 'Vegetables' 
-                        ? Colors.green 
-                        : Colors.grey[300],
-                    foregroundColor: _selectedCategory == 'Vegetables' 
-                        ? Colors.white 
-                        : Colors.black,
+                    backgroundColor:
+                        _selectedCategory == 'Vegetables'
+                            ? Colors.green
+                            : Colors.grey[300],
+                    foregroundColor:
+                        _selectedCategory == 'Vegetables'
+                            ? Colors.white
+                            : Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -278,10 +298,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         child: Center(
           child: Text(
             'No ${_selectedCategory.toLowerCase()} available at the moment',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           ),
         ),
       );
@@ -310,9 +327,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   Widget _buildProductCard(Product product) {
     return Card(
       elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -325,10 +340,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
               fit: BoxFit.cover,
             ),
             const SizedBox(height: 8),
-            Text(
-              product.name,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text(product.name, style: Theme.of(context).textTheme.titleMedium),
             const Spacer(),
             SizedBox(
               width: double.infinity,
@@ -337,10 +349,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => FarmerSelectionScreen(
-                        productName: product.name,
-                        productCategory: product.category,
-                      ),
+                      builder:
+                          (context) => FarmerSelectionScreen(
+                            productName: product.name,
+                            productCategory: product.category,
+                          ),
                     ),
                   );
                 },

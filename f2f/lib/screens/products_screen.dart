@@ -50,14 +50,33 @@ class _ProductsScreenState extends State<ProductsScreen> {
     Product(
       name: 'Apple',
       imageUrl: 'assets/images/apple.png',
-      price: 120,
+      price: 0.0,
       unit: 'kg',
     ),
     Product(
       name: 'Banana',
       imageUrl: 'assets/images/banana.png',
-      price: 40,
+      price: 0.0, // Changed from 0 to 0.0
       unit: 'dozen',
+    ),
+    // Added three new fruits
+    Product(
+      name: 'Orange',
+      imageUrl: 'assets/images/orange.png',
+      price: 0.0,
+      unit: 'kg',
+    ),
+    Product(
+      name: 'Grapes',
+      imageUrl: 'assets/images/grapes.png',
+      price: 0.0,
+      unit: 'kg',
+    ),
+    Product(
+      name: 'Watermelon',
+      imageUrl: 'assets/images/watermelon.png',
+      price: 0.0,
+      unit: 'kg',
     ),
   ];
 
@@ -65,13 +84,32 @@ class _ProductsScreenState extends State<ProductsScreen> {
     Product(
       name: 'Tomato',
       imageUrl: 'assets/images/tomato.png',
-      price: 30,
+      price: 0.0,
       unit: 'kg',
     ),
     Product(
       name: 'onion',
       imageUrl: 'assets/images/onion.png',
-      price: 25,
+      price: 0.0,
+      unit: 'kg',
+    ),
+    // Added three new vegetables
+    Product(
+      name: 'Potato',
+      imageUrl: 'assets/images/potato.png',
+      price: 0.0,
+      unit: 'kg',
+    ),
+    Product(
+      name: 'Carrot',
+      imageUrl: 'assets/images/carrot.png',
+      price: 0.0,
+      unit: 'kg',
+    ),
+    Product(
+      name: 'Cucumber',
+      imageUrl: 'assets/images/cucumber.png',
+      price: 0.0,
       unit: 'kg',
     ),
   ];
@@ -115,7 +153,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         setState(() => _isLoading = false);
       }
     } catch (e) {
-      debugPrint('Error fetching farmer data: $e');
+      //debugPrint('Error fetching farmer data: $e');
       setState(() {
         _farmerName = 'Error Loading Name';
         _isLoading = false;
@@ -414,16 +452,40 @@ class _ProductsScreenState extends State<ProductsScreen> {
         (sum, item) => sum + (item['total'] as double),
       );
 
-      // Create sale document with farmer details
-      await _firestore.collection('sales').add({
+      // Make sure we have a valid farmer ID
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+      _farmerId = user.uid; // Ensure _farmerId is always up-to-date
+
+      // Create a properly structured sale document
+      final saleData = {
         'farmerId': _farmerId,
-        'farmerName': _farmerName, // Using the properly fetched name
+        'farmerName': _farmerName,
         'items': soldItems,
         'totalAmount': totalAmount,
         'timestamp': FieldValue.serverTimestamp(),
         'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
         'status': 'pending',
-      });
+        'category': isVegetableSection ? 'Vegetables' : 'Fruits',
+      };
+
+      // Add logging to debug
+      //debugPrint('Attempting to save sale: $saleData');
+
+      // Save to main sales collection
+      final docRef = await _firestore.collection('sales').add(saleData);
+
+      // Also save to user's sales subcollection
+      await _firestore
+          .collection('users')
+          .doc(_farmerId)
+          .collection('sales')
+          .doc(docRef.id) // Use the same document ID for consistency
+          .set(saleData);
+
+      //debugPrint('Sale document created with ID: ${docRef.id}');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

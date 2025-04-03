@@ -190,7 +190,7 @@ class _AISearchScreenState extends State<AISearchScreen> {
     final bool isTeluguSelected = languageProvider.selectedLanguage == 'te';
     
     return Scaffold(
-      backgroundColor: const Color(0xFF1A5336),
+      backgroundColor: const Color(0xFF1A5336), // Updated background color
       appBar: AppBar(
         centerTitle: true,
         title: Text(
@@ -202,7 +202,7 @@ class _AISearchScreenState extends State<AISearchScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: const Color(0xFF266241),
+        backgroundColor: const Color(0xFF266241), // Updated app bar color
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
@@ -221,11 +221,7 @@ class _AISearchScreenState extends State<AISearchScreen> {
       body: Container(
         padding: const EdgeInsets.all(16.0),
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xff1A5319), Color(0xff0A2A10)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+          color: Color(0xFF1A5336), // Updated to solid color instead of gradient
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -246,7 +242,7 @@ class _AISearchScreenState extends State<AISearchScreen> {
               Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: const Color(0xFF266241), // Updated container color
                   borderRadius: BorderRadius.circular(15),
                   border: Border.all(color: Colors.white.withOpacity(0.2)),
                 ),
@@ -284,7 +280,7 @@ class _AISearchScreenState extends State<AISearchScreen> {
               else
                 Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xffD6EFD8),
+                    color: const Color(0xFFECF6E5), // Updated to match card color scheme
                     border: Border.all(color: Colors.black12.withOpacity(0.1)),
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: [
@@ -299,32 +295,34 @@ class _AISearchScreenState extends State<AISearchScreen> {
                     child: MarkdownBody(
                       data: _responseText,
                       styleSheet: MarkdownStyleSheet(
-                        h1: const TextStyle(
+                        h1: TextStyle(
                           fontSize: 24.0,
-                          color: Colors.black,
+                          color: Colors.green[800], // Updated text color
                           fontWeight: FontWeight.bold,
                         ),
-                        h2: const TextStyle(
+                        h2: TextStyle(
                           fontSize: 20.0,
-                          color: Colors.black,
+                          color: Colors.green[800], // Updated text color
                           fontWeight: FontWeight.bold,
                         ),
-                        p: const TextStyle(fontSize: 16.0, color: Colors.black),
+                        p: TextStyle(fontSize: 16.0, color: Colors.green[900]), // Updated text color
                       ),
                     ),
                   ),
                 ),
               const SizedBox(height: 20),
-              /*_buildRoundedButton(
-                icon: Icons.search,
-                label:
-                    isTeluguSelected
-                        ? 'గూగుల్‌లో శోధించండి'
-                        : 'Search on Google',
-                onPressed: _launchInBrowser,
-                backgroundColor: Colors.white,
-                textColor: const Color(0xff1A5319),
-              ),*/
+              if (!_isLoading && !_isTranslated && !isTeluguSelected)
+                ElevatedButton.icon(
+                  onPressed: _translateContent,
+                  icon: const Icon(Icons.translate),
+                  label: const Text('Translate to Telugu'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF266241), // Updated button color
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
             ],
           ),
         ),
