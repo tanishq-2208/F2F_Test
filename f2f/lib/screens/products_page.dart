@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+/*import 'package:flutter/material.dart';
 
 class Product {
   final String name;
@@ -75,7 +75,7 @@ class _ProductsPageState extends State<ProductsPage> {
     final Size screenSize = MediaQuery.of(context).size;
     final double height = screenSize.height;
     final double width = screenSize.width;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(isVegetableSection ? 'Vegetables' : 'Fruits'),
@@ -450,3 +450,4 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 }
+*/
