@@ -58,7 +58,7 @@ class MyApp extends StatelessWidget {
     return Consumer<LanguageService>(
       builder: (context, languageService, child) {
         return MaterialApp(
-          title: 'Farm2Fork Connect',
+          title: 'Farm2Fresh',
           locale: languageService.currentLocale,
           debugShowCheckedModeBanner: false,
           supportedLocales: const [
@@ -123,7 +123,7 @@ class MyApp extends StatelessWidget {
             },
           },
 
-          home: const CustomerHomeScreen(),
+          home: const WelcomeScreen(),
         );
       },
     );

@@ -13,8 +13,7 @@ class MyOrdersScreen extends StatefulWidget {
   State<MyOrdersScreen> createState() => _MyOrdersScreenState();
 }
 
-class _MyOrdersScreenState extends State<MyOrdersScreen>
-    with SingleTickerProviderStateMixin {
+class _MyOrdersScreenState extends State<MyOrdersScreen> with SingleTickerProviderStateMixin {
   final OrderService _orderService = OrderService();
   List<Map<String, dynamic>> _orders = [];
   List<Map<String, dynamic>> _oldDeliveredOrders = [];
@@ -26,10 +25,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _cleanupCancelledOrders().then((_) => _loadOrders());
+_cleanupCancelledOrders().then((_) => _loadOrders());
     _loadRandomDeliveredOrders();
   }
-
+  
   @override
   void dispose() {
     _tabController.dispose();
@@ -42,27 +41,24 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
         _isLoading = true;
         _errorMessage = null;
       });
-
-      final orders = await _orderService.getCustomerOrders(
-        context,
-        status: 'all',
-      );
-
+      
+      final orders = await _orderService.getCustomerOrders(context, status: 'all');
+      
       // Process each order
       for (var order in orders) {
         if (order['docId'] == null) {
           order['docId'] = order['orderId'];
         }
-
+        
         // If order is marked as cancelled, delete it from Firestore
         if (order['status'] == 'Cancelled') {
           String? documentId = order['docId'] ?? order['orderId'];
           if (documentId != null) {
             try {
               await FirebaseFirestore.instance
-                  .collection('orders')
-                  .doc(documentId)
-                  .delete();
+                .collection('orders')
+                .doc(documentId)
+                .delete();
               print('Deleted cancelled order: $documentId');
             } catch (e) {
               print('Error deleting cancelled order: $e');
@@ -70,11 +66,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
           }
         }
       }
-
+      
       // Filter out cancelled orders from UI
-      final filteredOrders =
-          orders.where((order) => order['status'] != 'Cancelled').toList();
-
+      final filteredOrders = orders.where((order) => order['status'] != 'Cancelled').toList();
+      
       setState(() {
         _orders = filteredOrders;
         _isLoading = false;
@@ -87,39 +82,34 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
       print('Error loading orders: $e');
     }
   }
-
+  
   Future<void> _cancelOrder(Map<String, dynamic> order) async {
     try {
-      bool confirmCancel =
-          await showDialog(
-            context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: const Text('Cancel Order'),
-                  content: const Text(
-                    'Are you sure you want to cancel this order? This action cannot be undone.',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('No'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: Text(
-                        'Yes, Cancel',
-                        style: TextStyle(color: Colors.red[700]),
-                      ),
-                    ),
-                  ],
-                ),
-          ) ??
-          false;
-
+      bool confirmCancel = await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Cancel Order'),
+          content: const Text('Are you sure you want to cancel this order? This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(
+                'Yes, Cancel',
+                style: TextStyle(color: Colors.red[700]),
+              ),
+            ),
+          ],
+        ),
+      ) ?? false;
+  
       if (!confirmCancel) return;
-
+      
       String? documentId = order['docId'] ?? order['orderId'];
-
+      
       if (documentId == null) {
         throw Exception('Cannot find document ID for this order');
       }
@@ -128,48 +118,46 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
           .collection('orders')
           .doc(documentId)
           .delete();
-
+  
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Order cancelled and removed successfully'),
           backgroundColor: Colors.green,
         ),
       );
-
+  
       _loadOrders();
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error cancelling order: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error cancelling order: $e')),
+      );
       print('Error cancelling order: $e');
     }
   }
-
+  
   Future<void> _loadRandomDeliveredOrders() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         throw Exception('User not authenticated');
       }
-
-      final querySnapshot =
-          await FirebaseFirestore.instance
-              .collection('orders')
-              .where('userId', isEqualTo: user.uid)
-              .where('status', isEqualTo: 'Delivered')
-              .where('isRated', isEqualTo: false)
-              .get();
-
-      final deliveredOrders =
-          querySnapshot.docs.map((doc) {
-            final data = doc.data();
-            return {
-              ...data,
-              'orderId': data['orderId'] ?? doc.id,
-              'docId': doc.id,
-            };
-          }).toList();
-
+  
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('orders')
+          .where('userId', isEqualTo: user.uid)
+          .where('status', isEqualTo: 'Delivered')
+          .where('isRated', isEqualTo: false)
+          .get();
+  
+      final deliveredOrders = querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          ...data,
+          'orderId': data['orderId'] ?? doc.id,
+          'docId': doc.id,
+        };
+      }).toList();
+  
       setState(() {
         _oldDeliveredOrders = deliveredOrders;
       });
@@ -177,10 +165,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
       print('Error loading delivered orders: $e');
     }
   }
-
+  
   void _onNavigationItemSelected(int index) {
     if (index == 2) return;
-
+    
     switch (index) {
       case 0:
         Navigator.pushReplacementNamed(context, '/customer_home');
@@ -190,30 +178,40 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
         break;
     }
   }
-
+  
   Widget _buildRatingsList() {
     if (_oldDeliveredOrders.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.star_border_rounded, size: 80, color: Colors.grey[400]),
+            Icon(
+              Icons.star_border_rounded,
+              size: 80,
+              color: Colors.grey[400],
+            ),
             const SizedBox(height: 16),
             Text(
               'No orders to rate',
-              style: TextStyle(fontSize: 18, color: Colors.grey[700]),
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[700],
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               'You\'ll see orders here once they\'re delivered',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
               textAlign: TextAlign.center,
             ),
           ],
         ),
       );
     }
-
+  
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: _oldDeliveredOrders.length,
@@ -223,16 +221,17 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
       },
     );
   }
-
+  
   Widget _buildSwiggyStyleRatingCard(Map<String, dynamic> order) {
-    final orderDate =
-        (order['orderDate'] as Timestamp?)?.toDate() ?? DateTime.now();
+    final orderDate = (order['orderDate'] as Timestamp?)?.toDate() ?? DateTime.now();
     final formattedDate = DateFormat('dd MMM, yyyy').format(orderDate);
-
+    
     return Card(
       margin: const EdgeInsets.only(bottom: 20),
       elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -274,7 +273,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
               ],
             ),
           ),
-
+          
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -290,7 +289,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
                   ),
                 ),
                 const SizedBox(width: 16),
-
+                
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,12 +304,18 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
                       const SizedBox(height: 4),
                       Text(
                         'From: ${order['farmerName'] ?? 'Unknown Farmer'}',
-                        style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          fontSize: 14,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Qty: ${order['quantity'] ?? 1} • ₹${(order['totalAmount'] ?? 0).toStringAsFixed(2)}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
@@ -318,9 +323,9 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
               ],
             ),
           ),
-
+          
           Divider(height: 1, thickness: 1, color: Colors.grey[200]),
-
+          
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -328,7 +333,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
               children: [
                 const Text(
                   'How was your experience?',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -338,16 +346,14 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
                       onTap: () => _rateFarmer(order, rating: index + 1),
                       child: Column(
                         children: [
-                          Icon(Icons.star, color: Colors.grey[300], size: 36),
+                          Icon(
+                            Icons.star,
+                            color: Colors.grey[300],
+                            size: 36,
+                          ),
                           const SizedBox(height: 4),
                           Text(
-                            [
-                              'Poor',
-                              'Average',
-                              'Good',
-                              'Very Good',
-                              'Excellent',
-                            ][index],
+                            ['Poor', 'Average', 'Good', 'Very Good', 'Excellent'][index],
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[600],
@@ -369,9 +375,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
   Future<void> _rateFarmer(Map<String, dynamic> order, {int rating = 0}) async {
     if (order['status'] != 'Delivered') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('You can only rate after delivery is complete'),
-        ),
+        const SnackBar(content: Text('You can only rate after delivery is complete')),
       );
       return;
     }
@@ -387,10 +391,9 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
           'timestamp': FieldValue.serverTimestamp(),
         });
 
-        await FirebaseFirestore.instance
-            .collection('orders')
-            .doc(order['docId'])
-            .update({'isRated': true});
+        await FirebaseFirestore.instance.collection('orders').doc(order['docId']).update({
+          'isRated': true,
+        });
 
         await _updateFarmerRating(order['farmerId'] ?? '');
 
@@ -404,9 +407,9 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
         _loadOrders();
         _loadRandomDeliveredOrders();
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error submitting rating: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error submitting rating: $e')),
+        );
       }
       return;
     }
@@ -414,13 +417,12 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder:
-            (context) => RateFarmerScreen(
-              farmerId: order['farmerId'] ?? '',
-              farmerName: order['farmerName'] ?? 'Unknown Farmer',
-              orderId: order['orderId'] ?? '',
-              productName: order['productName'] ?? '',
-            ),
+        builder: (context) => RateFarmerScreen(
+          farmerId: order['farmerId'] ?? '',
+          farmerName: order['farmerName'] ?? 'Unknown Farmer',
+          orderId: order['orderId'] ?? '',
+          productName: order['productName'] ?? '',
+        ),
       ),
     );
 
@@ -432,11 +434,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
 
   Future<void> _updateFarmerRating(String farmerId) async {
     try {
-      final ratingsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('ratings')
-              .where('farmerId', isEqualTo: farmerId)
-              .get();
+      final ratingsSnapshot = await FirebaseFirestore.instance
+          .collection('ratings')
+          .where('farmerId', isEqualTo: farmerId)
+          .get();
 
       if (ratingsSnapshot.docs.isEmpty) return;
 
@@ -446,18 +447,15 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
       }
       double averageRating = totalRating / ratingsSnapshot.docs.length;
 
-      await FirebaseFirestore.instance
-          .collection('farmers')
-          .doc(farmerId)
-          .update({
-            'averageRating': averageRating,
-            'ratingCount': ratingsSnapshot.docs.length,
-          });
+      await FirebaseFirestore.instance.collection('farmers').doc(farmerId).update({
+        'averageRating': averageRating,
+        'ratingCount': ratingsSnapshot.docs.length,
+      });
     } catch (e) {
       print('Error updating farmer rating: $e');
     }
   }
-
+  
   Widget _buildAllOrdersList() {
     if (_orders.isEmpty) {
       return _buildEmptyOrdersView();
@@ -475,41 +473,49 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
       ),
     );
   }
-
+  
   Widget _buildEmptyOrdersView() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.shopping_bag_outlined, size: 80, color: Colors.grey[400]),
+          Icon(
+            Icons.shopping_bag_outlined,
+            size: 80,
+            color: Colors.grey[400],
+          ),
           const SizedBox(height: 16),
           Text(
             'No orders yet',
-            style: TextStyle(fontSize: 18, color: Colors.grey[700]),
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey[700],
+            ),
           ),
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () {
               Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/customer_home',
-                (route) => false,
+                context, 
+                '/customer_home', 
+                (route) => false
               );
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green[700]),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green[700],
+            ),
             child: const Text('Start Shopping'),
           ),
         ],
       ),
     );
   }
-
+  
   Widget _buildOrderCard(Map<String, dynamic> order) {
-    final orderDate =
-        (order['orderDate'] as Timestamp?)?.toDate() ?? DateTime.now();
+    final orderDate = (order['orderDate'] as Timestamp?)?.toDate() ?? DateTime.now();
     final formattedDate = DateFormat('MMM dd, yyyy').format(orderDate);
     final orderStatus = order['status'] ?? 'Processing';
-
+    
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 4,
@@ -534,19 +540,17 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color:
-                        orderStatus == 'Cancelled'
-                            ? Colors.red[100]
-                            : Colors.green[100],
+                    color: orderStatus == 'Cancelled' 
+                        ? Colors.red[100] 
+                        : Colors.green[100],
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     orderStatus,
                     style: TextStyle(
-                      color:
-                          orderStatus == 'Cancelled'
-                              ? Colors.red[700]
-                              : Colors.green[700],
+                      color: orderStatus == 'Cancelled' 
+                          ? Colors.red[700] 
+                          : Colors.green[700],
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -562,10 +566,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
                   height: 80,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage(
-                        order['productImage'] ??
-                            'https://via.placeholder.com/150',
-                      ),
+                      image: NetworkImage(order['productImage'] ?? 'https://via.placeholder.com/150'),
                       fit: BoxFit.cover,
                     ),
                     borderRadius: BorderRadius.circular(8),
@@ -586,12 +587,16 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
                       const SizedBox(height: 8),
                       Text(
                         'Qty: ${order['quantity'] ?? 0}',
-                        style: TextStyle(color: Colors.grey[700]),
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Total: ₹${(order['totalAmount'] ?? 0.0).toStringAsFixed(2)}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -604,12 +609,14 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
               children: [
                 Text(
                   'Ordered on $formattedDate',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                  ),
                 ),
                 Row(
                   children: [
-                    if (orderStatus != 'Cancelled' &&
-                        orderStatus != 'Delivered')
+                    if (orderStatus != 'Cancelled' && orderStatus != 'Delivered')
                       TextButton.icon(
                         onPressed: () => _cancelOrder(order),
                         icon: const Icon(Icons.cancel, color: Colors.red),
@@ -619,8 +626,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
                         ),
                       ),
                     const SizedBox(width: 8),
-                    if (orderStatus == 'Delivered' &&
-                        !(order['isRated'] ?? false))
+                    if (orderStatus == 'Delivered' && !(order['isRated'] ?? false))
                       TextButton.icon(
                         onPressed: () => _rateFarmer(order),
                         icon: const Icon(Icons.star, color: Colors.orange),
@@ -647,7 +653,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
         backgroundColor: Colors.green[800],
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [Tab(text: 'All Orders'), Tab(text: 'Rate Farmers')],
+          tabs: const [
+            Tab(text: 'All Orders'),
+            Tab(text: 'Rate Farmers'),
+          ],
           indicatorColor: Colors.white,
           labelColor: Colors.white,
         ),
@@ -670,23 +679,22 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
 }
 
 // Add this method to clean up cancelled orders
-Future<void> _cleanupCancelledOrders() async {
-  try {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final querySnapshot =
-        await FirebaseFirestore.instance
-            .collection('orders')
-            .where('userId', isEqualTo: user.uid)
-            .where('status', isEqualTo: 'Cancelled')
-            .get();
-
-    for (var doc in querySnapshot.docs) {
-      await doc.reference.delete();
-      print('Cleaned up cancelled order: ${doc.id}');
+  Future<void> _cleanupCancelledOrders() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('orders')
+          .where('userId', isEqualTo: user.uid)
+          .where('status', isEqualTo: 'Cancelled')
+          .get();
+      
+      for (var doc in querySnapshot.docs) {
+        await doc.reference.delete();
+        print('Cleaned up cancelled order: ${doc.id}');
+      }
+    } catch (e) {
+      print('Error cleaning up cancelled orders: $e');
     }
-  } catch (e) {
-    print('Error cleaning up cancelled orders: $e');
-  }
-}//hi
+  }//hi

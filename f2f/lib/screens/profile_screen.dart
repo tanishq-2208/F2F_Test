@@ -66,13 +66,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFF1A5336), // Updated background color
       appBar: AppBar(
         title: Text(
           isTeluguSelected ? 'ప్రొఫైల్' : 'Profile',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: Colors.green.shade800,
+        backgroundColor: const Color(0xFF266241), // Updated app bar color
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -81,7 +81,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // Profile header
             Container(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
-              color: Colors.green.shade800,
+              color: const Color(0xFF266241), // Updated color
               child: Center(
                 child: Column(
                   children: [
@@ -235,9 +235,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: FarmerBottomNavigationBar(
-        selectedIndex: selectedIndex,
-        onItemTapped: onItemTapped,
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        height: 70, // Increased height
+        decoration: BoxDecoration(
+          color: const Color(0xFFD8E6C9), // Updated color
+          borderRadius: BorderRadius.circular(30.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30.0),
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              canvasColor: const Color(0xFFD8E6C9),
+            ),
+            child: FarmerBottomNavigationBar(
+              selectedIndex: selectedIndex,
+              onItemTapped: onItemTapped,
+            ),
+          ),
+        ),
       ),
     );
   }

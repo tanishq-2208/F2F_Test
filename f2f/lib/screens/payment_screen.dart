@@ -11,7 +11,7 @@ class PaymentScreen extends StatefulWidget {
   final int availableQuantity;
   final String? farmerId; // Add this parameter
   final int? quantity; // Add this parameter
-  
+
   const PaymentScreen({
     super.key,
     required this.productName,
@@ -21,7 +21,7 @@ class PaymentScreen extends StatefulWidget {
     this.farmerId, // Add to constructor
     this.quantity,
   });
-  
+
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
 }
@@ -49,19 +49,20 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   void _launchRazorpay() async {
     final Uri url = Uri.parse('https://rzp.io/rzp/0e06EW39');
-    
+
     if (await canLaunchUrl(url)) {
       // Launch the URL and wait for it to complete
       final result = await launchUrl(url, mode: LaunchMode.externalApplication);
-      
+
       if (result) {
         // This is a simplification since we can't actually detect payment success from the URL launch
         // In a real app, you would implement a webhook or callback from Razorpay
-        
+
         // Create the order in Firestore
         final orderService = OrderService();
-        final fullAddress = '${_addressController.text}, ${_cityController.text}, ${_stateController.text} - ${_zipController.text}';
-        
+        final fullAddress =
+            '${_addressController.text}, ${_cityController.text}, ${_stateController.text} - ${_zipController.text}';
+
         try {
           final orderId = await orderService.createOrder(
             productName: widget.productName,
@@ -73,29 +74,31 @@ class _PaymentScreenState extends State<PaymentScreen> {
             state: _stateController.text,
             zipCode: _zipController.text,
             phone: _phoneController.text,
-            farmerId: widget.farmerId ?? '', // Pass the farmerId with null check
+            farmerId:
+                widget.farmerId ?? '', // Pass the farmerId with null check
           );
-          
+
           // Navigate to success screen
           if (!mounted) return;
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => PaymentSuccessScreen(
-                productName: widget.productName,
-                productPrice: widget.productPrice,
-                quantity: quantity,
-                deliveryAddress: fullAddress,
-                orderId: orderId,
-                farmerId: widget.farmerId ?? '', // Add null check here too
-              ),
+              builder:
+                  (context) => PaymentSuccessScreen(
+                    productName: widget.productName,
+                    productPrice: widget.productPrice,
+                    quantity: quantity,
+                    deliveryAddress: fullAddress,
+                    orderId: orderId,
+                    farmerId: widget.farmerId ?? '', // Add null check here too
+                  ),
             ),
           );
         } catch (e) {
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error creating order: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error creating order: $e')));
         }
       } else {
         if (!mounted) return;
@@ -117,24 +120,27 @@ class _PaymentScreenState extends State<PaymentScreen> {
     });
 
     // Calculate total amount
-    final totalAmount = widget.productPrice * quantity + 40; // Include delivery fee
-    
+    final totalAmount =
+        widget.productPrice * quantity + 40; // Include delivery fee
+
     // Check if wallet has enough balance
     final walletService = WalletService();
     final hasEnough = await walletService.hasEnoughBalance(totalAmount);
-    
+
     if (!hasEnough) {
       setState(() {
         _isProcessing = false;
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Insufficient wallet balance. Please add money to your wallet.'),
+          content: Text(
+            'Insufficient wallet balance. Please add money to your wallet.',
+          ),
           backgroundColor: Colors.red,
         ),
       );
-      
+
       // Navigate to wallet screen
       if (!mounted) return;
       Navigator.pushNamed(context, '/wallet');
@@ -147,8 +153,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     // Create the order in Firestore
     final orderService = OrderService();
-    final fullAddress = '${_addressController.text}, ${_cityController.text}, ${_stateController.text} - ${_zipController.text}';
-    
+    final fullAddress =
+        '${_addressController.text}, ${_cityController.text}, ${_stateController.text} - ${_zipController.text}';
+
     try {
       final orderId = await orderService.createOrder(
         productName: widget.productName,
@@ -162,27 +169,28 @@ class _PaymentScreenState extends State<PaymentScreen> {
         phone: _phoneController.text,
         farmerId: widget.farmerId ?? '',
       );
-      
+
       // Navigate to success screen
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => PaymentSuccessScreen(
-            productName: widget.productName,
-            productPrice: widget.productPrice,
-            quantity: quantity,
-            deliveryAddress: fullAddress,
-            orderId: orderId,
-            farmerId: widget.farmerId ?? '',
-          ),
+          builder:
+              (context) => PaymentSuccessScreen(
+                productName: widget.productName,
+                productPrice: widget.productPrice,
+                quantity: quantity,
+                deliveryAddress: fullAddress,
+                orderId: orderId,
+                farmerId: widget.farmerId ?? '',
+              ),
         ),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error creating order: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error creating order: $e')));
     } finally {
       if (mounted) {
         setState(() {
@@ -197,9 +205,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
     double totalPrice = widget.productPrice * quantity;
 
     return Scaffold(
+      backgroundColor: const Color(0xFF1A5336), // Updated background color
       appBar: AppBar(
         title: const Text('Checkout'),
-        backgroundColor: Colors.green[700],
+        backgroundColor: const Color(0xFF266241), // Updated app bar color
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -212,6 +221,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               // Product summary
               Card(
                 elevation: 4,
+                color: const Color(0xFFECF6E5), // Updated card color
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
@@ -254,9 +264,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Quantity selector
               Card(
                 elevation: 4,
@@ -311,16 +321,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Cannot exceed available quantity'),
+                                    content: Text(
+                                      'Cannot exceed available quantity',
+                                    ),
                                     duration: Duration(seconds: 2),
                                   ),
                                 );
                               }
                             },
                             icon: const Icon(Icons.add_circle_outline),
-                            color: quantity < widget.availableQuantity 
-                                ? Colors.green[700] 
-                                : Colors.grey[400],
+                            color:
+                                quantity < widget.availableQuantity
+                                    ? Colors.green[700]
+                                    : Colors.grey[400],
                             iconSize: 32,
                           ),
                         ],
@@ -331,7 +344,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           'Available: ${widget.availableQuantity} units',
                           style: TextStyle(
                             fontSize: 14,
-                            color: widget.availableQuantity < 5 ? Colors.red : Colors.grey[600],
+                            color:
+                                widget.availableQuantity < 5
+                                    ? Colors.red
+                                    : Colors.grey[600],
                             fontStyle: FontStyle.italic,
                           ),
                         ),
@@ -340,9 +356,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Delivery address
               Card(
                 elevation: 4,
@@ -443,9 +459,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Order summary
               Card(
                 elevation: 4,
@@ -522,7 +538,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           ),
                         ],
                       ),
-                      
+
                       // Add payment method selection
                       const SizedBox(height: 16),
                       const Text(
@@ -569,39 +585,42 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Pay now button
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _isProcessing 
-                    ? null 
-                    : () {
-                        if (_formKey.currentState!.validate()) {
-                          if (_paymentMethod == 'Wallet') {
-                            _processWalletPayment();
-                          } else {
-                            _launchRazorpay();
-                          }
-                        }
-                      },
+                  onPressed:
+                      _isProcessing
+                          ? null
+                          : () {
+                            if (_formKey.currentState!.validate()) {
+                              if (_paymentMethod == 'Wallet') {
+                                _processWalletPayment();
+                              } else {
+                                _launchRazorpay();
+                              }
+                            }
+                          },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green[700],
+                    backgroundColor: const Color(
+                      0xFF266241,
+                    ), // Updated button color
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: Colors.grey,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                  child: _isProcessing
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Pay Now',
-                        style: TextStyle(fontSize: 18),
-                      ),
+                  child: const Text(
+                    'Proceed to Payment',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
-              
+
               // Add wallet balance display
               FutureBuilder<double>(
                 future: WalletService().getBalance(),

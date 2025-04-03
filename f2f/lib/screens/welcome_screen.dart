@@ -24,7 +24,7 @@ class WelcomeScreen extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0xFF1E8040), Color(0xFFF9F9F9)],
+                colors: [Color(0xFF1A5336), Color(0xFFF9F9F9)], // Updated gradient start color
               ),
             ),
           ),
@@ -82,7 +82,7 @@ class WelcomeScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E8040),
+                            color: Color(0xFF266241), // Updated text color
                           ),
                         ),
                         const SizedBox(height: 30),
@@ -125,19 +125,19 @@ class WelcomeScreen extends StatelessWidget {
                                       fit: BoxFit.cover,
                                       errorBuilder: (context, error, stackTrace) => 
                                           Container(
-                                            color: Colors.green.shade200,
+                                            color: const Color(0xFFD8E6C9), // Updated fallback color
                                             height: 160,
                                             width: double.infinity,
-                                            child: Icon(
+                                            child: const Icon(
                                               Icons.agriculture,
                                               size: 60,
-                                              color: Colors.green.shade800,
+                                              color: Color(0xFF266241), // Updated icon color
                                             ),
                                           ),
                                     ),
                                   ),
                                 ),
-                                // Content
+                                // Content with gradient overlay
                                 Container(
                                   padding: const EdgeInsets.all(20),
                                   decoration: BoxDecoration(
@@ -147,7 +147,7 @@ class WelcomeScreen extends StatelessWidget {
                                       end: Alignment.bottomCenter,
                                       colors: [
                                         Colors.transparent,
-                                        Colors.black.withOpacity(0.6),
+                                        const Color(0xFF1A5336).withOpacity(0.8), // Updated gradient color
                                       ],
                                     ),
                                   ),
@@ -216,19 +216,19 @@ class WelcomeScreen extends StatelessWidget {
                                       fit: BoxFit.cover,
                                       errorBuilder: (context, error, stackTrace) => 
                                           Container(
-                                            color: Colors.amber.shade200,
+                                            color: const Color(0xFFECF6E5), // Updated fallback color
                                             height: 160,
                                             width: double.infinity,
-                                            child: Icon(
+                                            child: const Icon(
                                               Icons.shopping_basket,
                                               size: 60,
-                                              color: Colors.amber.shade800,
+                                              color: Color(0xFF266241), // Updated icon color
                                             ),
                                           ),
                                     ),
                                   ),
                                 ),
-                                // Content
+                                // Content with gradient overlay
                                 Container(
                                   padding: const EdgeInsets.all(20),
                                   decoration: BoxDecoration(
@@ -238,7 +238,7 @@ class WelcomeScreen extends StatelessWidget {
                                       end: Alignment.bottomCenter,
                                       colors: [
                                         Colors.transparent,
-                                        Colors.black.withOpacity(0.6),
+                                        const Color(0xFF1A5336).withOpacity(0.8), // Updated gradient color
                                       ],
                                     ),
                                   ),
@@ -275,6 +275,12 @@ class WelcomeScreen extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          // Language toggle in top-right corner
+          Positioned(
+            top: 40,
+            right: 20,
+            child: LanguageToggle(),
           ),
         ],
       ),
