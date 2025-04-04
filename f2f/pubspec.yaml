@@ -58,6 +58,7 @@ dependencies:
   cloud_firestore: ^5.6.6
   firebase_auth: ^5.5.2
   url_launcher: ^6.3.1
+  razorpay_flutter: ^1.4.0
 
 
 dev_dependencies:
@@ -84,7 +85,6 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    
     - assets/images/
     - assets/videos/
     - assets/translations/

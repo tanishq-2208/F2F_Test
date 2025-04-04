@@ -19,7 +19,7 @@ class _FarmersMachineryScreenState extends State<FarmersMachineryScreen> {
     'Plows',
     'Harrows',
     'Rotavators',
-    'Tractors'
+    'Tractors',
   ];
 
   // List of farming machinery with their details
@@ -28,7 +28,8 @@ class _FarmersMachineryScreenState extends State<FarmersMachineryScreen> {
       'name': 'Disc Harrow',
       'image': 'assets/images/discHarrow_me.webp',
       'price': 25999.99,
-      'description': 'Heavy-duty disc harrow for efficient soil preparation and weed control.',
+      'description':
+          'Heavy-duty disc harrow for efficient soil preparation and weed control.',
       'category': 'Harrows',
       'rating': 4.6,
       'reviews': 32,
@@ -37,7 +38,8 @@ class _FarmersMachineryScreenState extends State<FarmersMachineryScreen> {
       'name': 'Dual Plow',
       'image': 'assets/images/dualplow_me.png',
       'price': 18499.99,
-      'description': 'Dual-purpose plow for versatile field preparation and cultivation.',
+      'description':
+          'Dual-purpose plow for versatile field preparation and cultivation.',
       'category': 'Plows',
       'rating': 4.3,
       'reviews': 27,
@@ -46,7 +48,8 @@ class _FarmersMachineryScreenState extends State<FarmersMachineryScreen> {
       'name': 'Rotavator',
       'image': 'assets/images/rotavator_me.jpg',
       'price': 32999.99,
-      'description': 'Professional rotavator for thorough soil mixing and seedbed preparation.',
+      'description':
+          'Professional rotavator for thorough soil mixing and seedbed preparation.',
       'category': 'Rotavators',
       'rating': 4.8,
       'reviews': 45,
@@ -58,7 +61,7 @@ class _FarmersMachineryScreenState extends State<FarmersMachineryScreen> {
     setState(() {
       _selectedIndex = index;
     });
-    
+
     // Navigation logic
     switch (index) {
       case 0: // Home
@@ -78,9 +81,9 @@ class _FarmersMachineryScreenState extends State<FarmersMachineryScreen> {
     if (_selectedCategory == 'All Machinery') {
       return _farmingMachinery;
     }
-    return _farmingMachinery.where((machinery) => 
-      machinery['category'] == _selectedCategory
-    ).toList();
+    return _farmingMachinery
+        .where((machinery) => machinery['category'] == _selectedCategory)
+        .toList();
   }
 
   @override
@@ -96,42 +99,17 @@ class _FarmersMachineryScreenState extends State<FarmersMachineryScreen> {
         children: [
           // Category selector
           _buildCategorySelector(),
-          
+
           // Machinery list
           Expanded(
-            child: _isLoading 
-              ? const Center(child: CircularProgressIndicator())
-              : _buildMachineryList(),
+            child:
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _buildMachineryList(),
           ),
         ],
       ),
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        height: 70,
-        decoration: BoxDecoration(
-          color: const Color(0xFFD8E6C9),
-          borderRadius: BorderRadius.circular(30.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30.0),
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              canvasColor: const Color(0xFFD8E6C9),
-            ),
-            child: CustomerBottomNavigationBar(
-              selectedIndex: _selectedIndex,
-              onItemSelected: _onNavigationItemSelected,
-            ),
-          ),
-        ),
-      ),
+      // Bottom navigation bar removed
     );
   }
 
@@ -147,7 +125,7 @@ class _FarmersMachineryScreenState extends State<FarmersMachineryScreen> {
         itemBuilder: (context, index) {
           final category = _categories[index];
           final isSelected = category == _selectedCategory;
-          
+
           return Container(
             margin: const EdgeInsets.only(right: 12),
             child: ElevatedButton(
@@ -157,7 +135,8 @@ class _FarmersMachineryScreenState extends State<FarmersMachineryScreen> {
                 });
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: isSelected ? const Color(0xFF266241) : Colors.grey[200],
+                backgroundColor:
+                    isSelected ? const Color(0xFF266241) : Colors.grey[200],
                 foregroundColor: isSelected ? Colors.white : Colors.black87,
                 elevation: isSelected ? 2 : 0,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -178,10 +157,7 @@ class _FarmersMachineryScreenState extends State<FarmersMachineryScreen> {
       return Center(
         child: Text(
           'No $_selectedCategory available at the moment',
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
         ),
       );
     }
@@ -202,9 +178,7 @@ class _FarmersMachineryScreenState extends State<FarmersMachineryScreen> {
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
       color: const Color(0xFFECF6E5), // Updated card color
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -311,7 +285,9 @@ class _FarmersMachineryScreenState extends State<FarmersMachineryScreen> {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF266241), // Updated button color
+                  backgroundColor: const Color(
+                    0xFF266241,
+                  ), // Updated button color
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -319,10 +295,7 @@ class _FarmersMachineryScreenState extends State<FarmersMachineryScreen> {
                 ),
                 child: const Text(
                   'Buy Now',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
               ),
             ),

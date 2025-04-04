@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../models/product.dart';
 import '../services/product_service.dart';
-import '../screens/farmer_selection_screen.dart';
+import '../screens/farmer_selection_screen.dart';  // Note: singular 'farmer', not 'farmers'
 import '../widgets/customer_bottom_navigation_bar.dart';
 import 'reel_screen.dart';
 
@@ -19,24 +19,26 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
   // Add this method
   // Fix the navigation method
-  void _onNavigationItemSelected(int index) {
+  void _onItemSelected(int index) {
     setState(() {
       _selectedIndex = index;
     });
 
-    // Navigation logic
     switch (index) {
-      case 0: // Home
+      case 0:
         // Already on home screen
         break;
-      case 1: // Reels
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const ReelScreen()),
-        );
+      case 1:
+        // Navigate to reels
+        Navigator.pushNamed(context, '/reels_screen');
         break;
-      case 2: // Orders
+      case 2:
+        // Navigate to orders
         Navigator.pushNamed(context, '/my_orders');
+        break;
+      case 3:
+        // Navigate to ratings
+        Navigator.pushNamed(context, '/ratings');
         break;
     }
   }
@@ -91,10 +93,14 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // In the AppBar section of the build method
+      backgroundColor: const Color(
+        0xFF1A5336,
+      ), // Dark green background matching home_screen
       appBar: AppBar(
         title: const Text('Farm2Fresh'),
-        backgroundColor: Colors.green,
+        backgroundColor: const Color(0xFF266241), // Matching green for app bar
+        foregroundColor: Colors.white,
+        elevation: 0,
         actions: [
           // Wallet icon with image
           Padding(
@@ -107,7 +113,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 'assets/images/wallet.png',
                 width: 24,
                 height: 24,
-                // Remove the color property to show the image in its original colors
+                color: Colors.white, // Making icon white to match theme
               ),
             ),
           ),
@@ -115,6 +121,8 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         ],
       ),
       body: RefreshIndicator(
+        color: Colors.white, // White color for refresh indicator
+        backgroundColor: const Color(0xFF266241), // Green background
         onRefresh: _loadProducts,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -133,7 +141,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
               // Products Grid
               _isLoading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
                   : _buildProductsGrid(),
             ],
           ),
@@ -143,7 +155,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         height: 70, // Increased height
         decoration: BoxDecoration(
-          color: const Color(0xFFD8E6C9), // Updated color
+          color: const Color(0xFFD8E6C9), // Matching color from home_screen
           borderRadius: BorderRadius.circular(30.0),
           boxShadow: [
             BoxShadow(
@@ -161,7 +173,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             ).copyWith(canvasColor: const Color(0xFFD8E6C9)),
             child: CustomerBottomNavigationBar(
               selectedIndex: _selectedIndex,
-              onItemSelected: _onNavigationItemSelected,
+              onItemSelected: _onItemSelected,
             ),
           ),
         ),
@@ -169,23 +181,49 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     );
   }
 
+  // Update the banner images with promotional content
+  // Update the banner data to use internet images
+  final List<Map<String, dynamic>> _bannerData = [
+    {
+      'image':
+          'https://images.unsplash.com/photo-1610832958506-aa56368176cf?q=80&w=1170&auto=format&fit=crop',
+      'title': '50% OFF',
+      'subtitle': 'Fresh Seasonal Fruits',
+      'color': Colors.orange,
+    },
+    {
+      'image':
+          'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?q=80&w=1169&auto=format&fit=crop',
+      'title': 'SPECIAL OFFER',
+      'subtitle': 'Organic Vegetables at 30% OFF',
+      'color': Colors.green[700],
+    },
+    {
+      'image':
+          'https://images.unsplash.com/photo-1488459716781-31db52582fe9?q=80&w=1170&auto=format&fit=crop',
+      'title': 'FARM FRESH',
+      'subtitle': 'Buy Direct from Farmers',
+      'color': Colors.blue[700],
+    },
+  ];
+
   Widget _buildBannerCarousel() {
     return Column(
       children: [
         SizedBox(
           height: 180,
           child: PageView.builder(
-            controller:
-                _bannerController, // Fix: Changed from bannerController to _bannerController
-            itemCount: _bannerImages.length,
+            controller: _bannerController,
+            itemCount: _bannerData.length,
             itemBuilder: (context, index) {
+              final banner = _bannerData[index];
               return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
+                      color: Colors.black.withOpacity(0.3),
                       spreadRadius: 1,
                       blurRadius: 5,
                     ),
@@ -193,15 +231,99 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(15),
-                  child: Image.asset(
-                    _bannerImages[index],
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[300],
-                        child: const Center(child: Text('Image not available')),
-                      );
-                    },
+                  child: Stack(
+                    children: [
+                      // Banner image - changed from Image.asset to Image.network
+                      Image.network(
+                        banner['image'],
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            color: Colors.grey[300],
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                value:
+                                    loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress
+                                                .cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
+                                        : null,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.green[700]!,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Text('Image not available'),
+                            ),
+                          );
+                        },
+                      ),
+                      // Rest of the stack remains the same
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topRight,
+                            end: Alignment.bottomLeft,
+                            colors: [
+                              Colors.black.withOpacity(0.1),
+                              Colors.black.withOpacity(0.5),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: banner['color'],
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                banner['title'],
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              banner['subtitle'],
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(1, 1),
+                                    blurRadius: 3,
+                                    color: Colors.black54,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -211,13 +333,13 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         const SizedBox(height: 10),
         SmoothPageIndicator(
           controller: _bannerController,
-          count: _bannerImages.length,
-          effect: const ExpandingDotsEffect(
-            activeDotColor: Colors.green,
-            dotColor: Colors.grey,
+          count: _bannerData.length,
+          effect: const WormEffect(
+            dotColor: Colors.white54,
+            activeDotColor: Colors.white,
             dotHeight: 8,
             dotWidth: 8,
-            spacing: 5,
+            spacing: 8,
           ),
         ),
       ],
@@ -232,7 +354,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         children: [
           const Text(
             'Categories',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white, // White text for dark background
+            ),
           ),
           const SizedBox(height: 10),
           Row(
@@ -247,12 +373,14 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
                         _selectedCategory == 'Fruits'
-                            ? Colors.green
-                            : Colors.grey[300],
+                            ? const Color(
+                              0xFFECF6E5,
+                            ) // Light green from home_screen
+                            : Colors.white.withOpacity(0.2),
                     foregroundColor:
                         _selectedCategory == 'Fruits'
-                            ? Colors.white
-                            : Colors.black,
+                            ? Colors.green[800]
+                            : Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -271,12 +399,14 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
                         _selectedCategory == 'Vegetables'
-                            ? Colors.green
-                            : Colors.grey[300],
+                            ? const Color(
+                              0xFFECF6E5,
+                            ) // Light green from home_screen
+                            : Colors.white.withOpacity(0.2),
                     foregroundColor:
                         _selectedCategory == 'Vegetables'
-                            ? Colors.white
-                            : Colors.black,
+                            ? Colors.green[800]
+                            : Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -298,7 +428,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         child: Center(
           child: Text(
             'No ${_selectedCategory.toLowerCase()} available at the moment',
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            style: const TextStyle(fontSize: 16, color: Colors.white70),
           ),
         ),
       );
@@ -326,21 +456,31 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
   Widget _buildProductCard(Product product) {
     return Card(
-      elevation: 3,
+      elevation: 4,
+      color: const Color(0xFFECF6E5), // Light green background from home_screen
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.network(
-              product.imageUrl,
-              height: 100,
-              width: double.infinity,
-              fit: BoxFit.cover,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                product.imageUrl,
+                height: 100,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
             ),
             const SizedBox(height: 8),
-            Text(product.name, style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              product.name,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.green[800],
+              ),
+            ),
             const Spacer(),
             SizedBox(
               width: double.infinity,
@@ -349,16 +489,21 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder:
-                          (context) => FarmerSelectionScreen(
-                            productName: product.name,
-                            productCategory: product.category,
-                          ),
+                      builder: (context) => FarmerSelectionScreen(
+                        productName: product.name,
+                        productCategory: product.category,
+                      ),
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700],
+                  backgroundColor: const Color(
+                    0xFF266241,
+                  ), // Matching app bar color
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 child: const Text('Buy Now'),
               ),

@@ -36,6 +36,10 @@ class CustomerBottomNavigationBar extends StatelessWidget {
               icon: Icon(Icons.receipt_long_rounded),
               label: 'Orders',
             ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.star_rounded),
+              label: 'Ratings',
+            ),
           ],
         ),
       ),

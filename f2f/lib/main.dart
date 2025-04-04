@@ -6,6 +6,8 @@ import 'package:f2f/screens/farmer_orders_screen.dart';
 import 'package:f2f/screens/farmers_fertilizers_screen.dart';
 import 'package:f2f/screens/farmers_tools_screen.dart';
 import 'package:f2f/screens/farmers_machinery_screen.dart';
+import 'package:f2f/screens/rate_farmer_screen.dart';
+import 'package:f2f/screens/reel_screen.dart';
 import 'package:f2f/screens/wallet_screen.dart'; // Add this import
 
 import 'package:f2f/screens/home_screen.dart';
@@ -84,6 +86,7 @@ class MyApp extends StatelessWidget {
             ),
           ),
           routes: {
+            '/reels_screen': (context) => const ReelScreen(),
             '/my_orders': (context) => const MyOrdersScreen(),
             '/home': (context) => const HomeScreen(),
             '/farmer_orders': (context) => const FarmerOrdersScreen(),
@@ -96,11 +99,21 @@ class MyApp extends StatelessWidget {
             '/farmer_login': (context) => const FarmerLoginScreen(),
             '/plant_analysis': (context) => const PlantAnalysisScreen(),
             '/farmer_tools': (context) => const FarmersToolsScreen(),
-            '/farmer_machinery': (context) => const FarmersMachineryScreen(), // Add this route
-            '/farmer_fertilizers': (context) => const FarmersFertilizersScreen(),
+            '/farmer_machinery':
+                (context) => const FarmersMachineryScreen(), // Add this route
+            '/farmer_fertilizers':
+                (context) => const FarmersFertilizersScreen(),
             '/profile': (context) => const ProfileScreen(),
             '/wallet': (context) => const WalletScreen(), // Add this route
-            '/ai': (context) => const AISearchScreen(
+            '/ratings':
+                (context) => const RateFarmerScreen(
+                  farmerId: '',
+                  farmerName: 'Select a farmer to rate',
+                  orderId: '',
+                  productName: '',
+                ),
+            '/ai':
+                (context) => const AISearchScreen(
                   diseaseName: 'General',
                   searchType: 'information',
                 ),

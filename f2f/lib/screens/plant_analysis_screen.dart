@@ -319,13 +319,19 @@ class _PlantAnalysisScreenState extends State<PlantAnalysisScreen>
                               icon: Icons.camera_alt,
                               label: isTeluguSelected ? 'కెమెరా' : 'Camera',
                               onPressed: () => _getImage(ImageSource.camera),
-                              color: Colors.blue,
+                              color:
+                                  Colors
+                                      .green
+                                      .shade400, // Changed from blue to light green
                             ),
                             _buildImageSourceButton(
                               icon: Icons.photo_library,
                               label: isTeluguSelected ? 'గ్యాలరీ' : 'Gallery',
                               onPressed: () => _getImage(ImageSource.gallery),
-                              color: Colors.purple,
+                              color:
+                                  Colors
+                                      .green
+                                      .shade400, // Changed from purple to light green
                             ),
                           ],
                         ),

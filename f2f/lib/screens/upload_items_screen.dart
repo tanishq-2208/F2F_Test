@@ -176,7 +176,7 @@ class _UploadItemsScreenState extends State<UploadItemsScreen> {
                             height: 50,
                             fit: BoxFit.contain,
                           ),
-                          backgroundColor: Colors.red.shade100,
+                          backgroundColor: Colors.green.shade100,
                         ),
                         _buildCategoryCard(
                           context,
@@ -238,9 +238,9 @@ class _UploadItemsScreenState extends State<UploadItemsScreen> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(30.0),
           child: Theme(
-            data: Theme.of(context).copyWith(
-              canvasColor: const Color(0xFFD8E6C9),
-            ),
+            data: Theme.of(
+              context,
+            ).copyWith(canvasColor: const Color(0xFFD8E6C9)),
             child: FarmerBottomNavigationBar(
               selectedIndex: _selectedIndex,
               onItemTapped: _onItemTapped,

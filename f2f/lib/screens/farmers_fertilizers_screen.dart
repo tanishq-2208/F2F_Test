@@ -5,7 +5,8 @@ class FarmersFertilizersScreen extends StatefulWidget {
   const FarmersFertilizersScreen({super.key});
 
   @override
-  State<FarmersFertilizersScreen> createState() => _FarmersFertilizersScreenState();
+  State<FarmersFertilizersScreen> createState() =>
+      _FarmersFertilizersScreenState();
 }
 
 class _FarmersFertilizersScreenState extends State<FarmersFertilizersScreen> {
@@ -19,7 +20,7 @@ class _FarmersFertilizersScreenState extends State<FarmersFertilizersScreen> {
     'Seeds',
     'Fertilizers',
     'Soil Enhancers',
-    'Pesticides'
+    'Pesticides',
   ];
 
   // List of farming fertilizers with their details
@@ -46,7 +47,8 @@ class _FarmersFertilizersScreenState extends State<FarmersFertilizersScreen> {
       'name': 'Soil Enhancer',
       'image': 'assets/images/soilEnha_sf.webp',
       'price': 649.99,
-      'description': 'Advanced soil enhancer to improve soil structure and fertility.',
+      'description':
+          'Advanced soil enhancer to improve soil structure and fertility.',
       'category': 'Soil Enhancers',
       'rating': 4.5,
       'reviews': 29,
@@ -58,7 +60,7 @@ class _FarmersFertilizersScreenState extends State<FarmersFertilizersScreen> {
     setState(() {
       _selectedIndex = index;
     });
-    
+
     // Navigation logic
     switch (index) {
       case 0: // Home
@@ -78,9 +80,9 @@ class _FarmersFertilizersScreenState extends State<FarmersFertilizersScreen> {
     if (_selectedCategory == 'All Products') {
       return _farmingFertilizers;
     }
-    return _farmingFertilizers.where((fertilizer) => 
-      fertilizer['category'] == _selectedCategory
-    ).toList();
+    return _farmingFertilizers
+        .where((fertilizer) => fertilizer['category'] == _selectedCategory)
+        .toList();
   }
 
   @override
@@ -96,42 +98,17 @@ class _FarmersFertilizersScreenState extends State<FarmersFertilizersScreen> {
         children: [
           // Category selector
           _buildCategorySelector(),
-          
+
           // Fertilizers list
           Expanded(
-            child: _isLoading 
-              ? const Center(child: CircularProgressIndicator())
-              : _buildFertilizersList(),
+            child:
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _buildFertilizersList(),
           ),
         ],
       ),
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        height: 70, // Increased height
-        decoration: BoxDecoration(
-          color: const Color(0xFFD8E6C9), // Updated color
-          borderRadius: BorderRadius.circular(30.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30.0),
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              canvasColor: const Color(0xFFD8E6C9),
-            ),
-            child: CustomerBottomNavigationBar(
-              selectedIndex: _selectedIndex,
-              onItemSelected: _onNavigationItemSelected,
-            ),
-          ),
-        ),
-      ),
+      // Bottom navigation bar removed
     );
   }
 
@@ -147,7 +124,7 @@ class _FarmersFertilizersScreenState extends State<FarmersFertilizersScreen> {
         itemBuilder: (context, index) {
           final category = _categories[index];
           final isSelected = category == _selectedCategory;
-          
+
           return Container(
             margin: const EdgeInsets.only(right: 12),
             child: ElevatedButton(
@@ -157,7 +134,8 @@ class _FarmersFertilizersScreenState extends State<FarmersFertilizersScreen> {
                 });
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: isSelected ? const Color(0xFF266241) : Colors.grey[200],
+                backgroundColor:
+                    isSelected ? const Color(0xFF266241) : Colors.grey[200],
                 foregroundColor: isSelected ? Colors.white : Colors.black87,
                 elevation: isSelected ? 2 : 0,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -178,10 +156,7 @@ class _FarmersFertilizersScreenState extends State<FarmersFertilizersScreen> {
       return Center(
         child: Text(
           'No $_selectedCategory available at the moment',
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
         ),
       );
     }
@@ -201,9 +176,7 @@ class _FarmersFertilizersScreenState extends State<FarmersFertilizersScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -318,10 +291,7 @@ class _FarmersFertilizersScreenState extends State<FarmersFertilizersScreen> {
                 ),
                 child: const Text(
                   'Buy Now',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
               ),
             ),

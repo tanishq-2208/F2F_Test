@@ -19,14 +19,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<bool> _isFarmer() async {
     final user = _auth.currentUser;
     if (user == null) return false;
-    
+
     try {
       // Check if the user exists in the farmers collection
-      final farmerDoc = await FirebaseFirestore.instance
-          .collection('farmers')
-          .where('userId', isEqualTo: user.uid)
-          .get();
-      
+      final farmerDoc =
+          await FirebaseFirestore.instance
+              .collection('farmers')
+              .where('userId', isEqualTo: user.uid)
+              .get();
+
       return farmerDoc.docs.isNotEmpty;
     } catch (e) {
       print('Error checking farmer status: $e');
@@ -70,7 +71,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: Text(
           isTeluguSelected ? 'ప్రొఫైల్' : 'Profile',
-          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         backgroundColor: const Color(0xFF266241), // Updated app bar color
         elevation: 0,
@@ -127,7 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onTap: () async {
                 // Check if the user is a farmer
                 final isFarmer = await _isFarmer();
-                
+
                 // Navigate to the appropriate screen based on user role
                 if (isFarmer) {
                   Navigator.pushNamed(context, '/farmer_orders');
@@ -216,7 +220,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: ElevatedButton(
                 onPressed: () async {
                   await _auth.signOut();
-                  Navigator.pushReplacementNamed(context, '/welcome');
+                  // Changed from '/welcome' to '/' to navigate to the welcome screen
+                  Navigator.pushReplacementNamed(context, '/');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade700,
@@ -252,9 +257,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(30.0),
           child: Theme(
-            data: Theme.of(context).copyWith(
-              canvasColor: const Color(0xFFD8E6C9),
-            ),
+            data: Theme.of(
+              context,
+            ).copyWith(canvasColor: const Color(0xFFD8E6C9)),
             child: FarmerBottomNavigationBar(
               selectedIndex: selectedIndex,
               onItemTapped: onItemTapped,
@@ -275,7 +280,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.green.shade800,
+            color: Colors.white,
           ),
         ),
       ),

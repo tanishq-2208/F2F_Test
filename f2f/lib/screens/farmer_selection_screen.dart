@@ -9,7 +9,8 @@ class FarmerSelectionScreen extends StatefulWidget {
 
   const FarmerSelectionScreen({
     super.key,
-    required this.productName, required String productCategory,
+    required this.productName,
+    required String productCategory,
   });
 
   @override
@@ -29,10 +30,11 @@ class _FarmerSelectionScreenState extends State<FarmerSelectionScreen> {
 
   Future<void> _fetchFarmersWithProduct() async {
     try {
-      final querySnapshot = await _firestore
-          .collection('sales')
-          .orderBy('date', descending: true)
-          .get();
+      final querySnapshot =
+          await _firestore
+              .collection('sales')
+              .orderBy('date', descending: true)
+              .get();
 
       final Map<String, Map<String, dynamic>> farmersMap = {};
 
@@ -47,7 +49,7 @@ class _FarmerSelectionScreenState extends State<FarmerSelectionScreen> {
           for (var item in data['items']) {
             if (item is Map) {
               final itemName = item['name']?.toString().trim() ?? '';
-              
+
               // Only process items matching the product we're looking for
               if (itemName.toLowerCase() == widget.productName.toLowerCase()) {
                 if (!farmersMap.containsKey(farmerId)) {
@@ -61,18 +63,25 @@ class _FarmerSelectionScreenState extends State<FarmerSelectionScreen> {
                 }
 
                 // Update the farmer's total quantity and price
-                final quantity = (item['quantity'] is num)
-                    ? (item['quantity'] as num).toDouble()
-                    : double.tryParse(item['quantity']?.toString() ?? '0') ?? 0;
-                
-                final price = (item['price'] is num)
-                    ? (item['price'] as num).toDouble()
-                    : double.tryParse(item['price']?.toString() ?? '0') ?? 0;
-                
+                final quantity =
+                    (item['quantity'] is num)
+                        ? (item['quantity'] as num).toDouble()
+                        : double.tryParse(
+                              item['quantity']?.toString() ?? '0',
+                            ) ??
+                            0;
+
+                final price =
+                    (item['price'] is num)
+                        ? (item['price'] as num).toDouble()
+                        : double.tryParse(item['price']?.toString() ?? '0') ??
+                            0;
+
                 final unit = item['unit']?.toString().toLowerCase() ?? 'kg';
 
                 farmersMap[farmerId]!['totalQuantity'] += quantity;
-                farmersMap[farmerId]!['pricePerUnit'] = price; // Use the latest price
+                farmersMap[farmerId]!['pricePerUnit'] =
+                    price; // Use the latest price
                 farmersMap[farmerId]!['unit'] = unit;
               }
             }
@@ -84,13 +93,12 @@ class _FarmerSelectionScreenState extends State<FarmerSelectionScreen> {
         _farmers = farmersMap.values.toList();
         _isLoading = false;
       });
-
     } catch (e) {
       print('Error fetching farmers data: $e');
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching data: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error fetching data: $e')));
     }
   }
 
@@ -102,110 +110,136 @@ class _FarmerSelectionScreenState extends State<FarmerSelectionScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          currentLanguage == 'en' 
+          currentLanguage == 'en'
               ? 'Select Farmer for ${widget.productName}'
               : '${widget.productName} కోసం రైతును ఎంచుకోండి',
         ),
         backgroundColor: Colors.green.shade800,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _farmers.isEmpty
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _farmers.isEmpty
               ? Center(
-                  child: Text(
-                    currentLanguage == 'en'
-                        ? 'No farmers available for ${widget.productName}'
-                        : '${widget.productName} కోసం రైతులు అందుబాటులో లేరు',
-                  ),
-                )
+                child: Text(
+                  currentLanguage == 'en'
+                      ? 'No farmers available for ${widget.productName}'
+                      : '${widget.productName} కోసం రైతులు అందుబాటులో లేరు',
+                ),
+              )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _farmers.length,
-                  itemBuilder: (context, index) {
-                    final farmer = _farmers[index];
-                    final quantity = farmer['totalQuantity'] ?? 0;
-                    final price = farmer['pricePerUnit'] ?? 0;
-                    final unit = farmer['unit'] ?? 'kg';
+                padding: const EdgeInsets.all(16),
+                itemCount: _farmers.length,
+                itemBuilder: (context, index) {
+                  final farmer = _farmers[index];
+                  final quantity = farmer['totalQuantity'] ?? 0;
+                  final price = farmer['pricePerUnit'] ?? 0;
+                  final unit = farmer['unit'] ?? 'kg';
 
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              farmer['farmerName'] as String,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            farmer['farmerName'] as String,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.star_border,
+                                color: Colors.amber,
+                                size: 18,
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Icon(Icons.star_border, color: Colors.amber, size: 18),
-                                Icon(Icons.star_border, color: Colors.amber, size: 18),
-                                Icon(Icons.star_border, color: Colors.amber, size: 18),
-                                Icon(Icons.star_border, color: Colors.amber, size: 18),
-                                Icon(Icons.star_border, color: Colors.amber, size: 18),
-                                const SizedBox(width: 4),
-                                const Text('(0)'),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              '${currentLanguage == 'en' ? 'Available' : 'అందుబాటులో'}: $quantity $unit',
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                const Spacer(),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.shade100,
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Text(
-                                    '₹${price.toStringAsFixed(0)}/$unit',
-                                    style: TextStyle(
-                                      color: Colors.green.shade800,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                              Icon(
+                                Icons.star_border,
+                                color: Colors.amber,
+                                size: 18,
+                              ),
+                              Icon(
+                                Icons.star_border,
+                                color: Colors.amber,
+                                size: 18,
+                              ),
+                              Icon(
+                                Icons.star_border,
+                                color: Colors.amber,
+                                size: 18,
+                              ),
+                              Icon(
+                                Icons.star_border,
+                                color: Colors.amber,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 4),
+                              const Text('(0)'),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            '${currentLanguage == 'en' ? 'Available' : 'అందుబాటులో'}: $quantity $unit',
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const Spacer(),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade100,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Text(
+                                  '₹${price.toStringAsFixed(0)}/$unit',
+                                  style: TextStyle(
+                                    color: Colors.green.shade800,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => PaymentScreen(
+                                          productImage:
+                                              '', // Added required productImage parameter
+                                          productPrice:
+                                              farmer['pricePerUnit'], // Keep as double
+                                          productName: widget.productName,
+                                          availableQuantity:
+                                              _farmers[index]['totalQuantity']
+                                                  .toInt(), // Keep as double
+                                        ),
+                                  ),
+                                );
+                              },
+                              child: const Text('Buy Now'),
                             ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              child: // In your product detail screen where the "Buy Now" button is located
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => PaymentScreen(
-                                              productImage: '', // Added required productImage parameter
-                                              productPrice: farmer['pricePerUnit'],
-                                              productName: widget.productName, availableQuantity: _farmers[index]['totalQuantity'],
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                      child: const Text('Buy Now'),
-                                    ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
+              ),
     );
   }
 }
